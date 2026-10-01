@@ -7,6 +7,7 @@ import static org.firstinspires.ftc.teamcode.robot.RobotConstants.ARM_NUM_LEVS;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.EL_SPD;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.EL_SPD_DWN;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.WR_SENSE;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
