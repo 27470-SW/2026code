@@ -1,4 +1,0 @@
-// Lets MeepMeepTesting build on its own (no Android SDK needed):
-//   cd MeepMeepTesting && ../gradlew run
-// When built from the repo root, the root settings.gradle includes this module instead.
-rootProject.name = 'MeepMeepTesting'

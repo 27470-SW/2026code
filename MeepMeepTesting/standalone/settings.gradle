@@ -1,0 +1,10 @@
+// Standalone build for MeepMeepTesting, for PCs without Android Studio / the Android SDK.
+//   cd MeepMeepTesting/standalone
+//   ../../gradlew run            (Windows: ..\..\gradlew.bat run)
+//
+// This lives in its own folder on purpose: a settings.gradle directly in MeepMeepTesting/
+// makes Android Studio treat that folder as a separate project, which breaks the
+// MeepMeepTestiing run configuration ("project 'MeepMeepTesting' not found").
+rootProject.name = 'MeepMeepStandalone'
+include ':MeepMeepTesting'
+project(':MeepMeepTesting').projectDir = file('..')

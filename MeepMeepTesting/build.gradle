@@ -6,7 +6,7 @@ plugins {
 // MeepMeepTesting is a plain Java desktop app (no Android) for visualizing
 // Road Runner trajectories on the field.  Run it with:
 //   ./gradlew :MeepMeepTesting:run          (from the repo root, needs Android SDK configured)
-//   cd MeepMeepTesting && ../gradlew run    (standalone, only needs a JDK 17+)
+//   cd MeepMeepTesting/standalone && ../../gradlew run   (standalone, only needs a JDK 17+)
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17

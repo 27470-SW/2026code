@@ -15,8 +15,8 @@ This repo is the official [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcR
 MeepMeep is plain Java, so it does not need Android Studio or the Android SDK:
 
 ```
-cd MeepMeepTesting
-../gradlew run          # Windows: ..\gradlew.bat run
+cd MeepMeepTesting/standalone
+../../gradlew run       # Windows: ..\..\gradlew.bat run
 ```
 
 In Android Studio, pick **MeepMeepTestiing** from the run configuration dropdown (next to the green Run arrow)
