@@ -1,0 +1,98 @@
+package com.example.meepmeeptesting;
+
+//import com.noahbres.meepmeep.MeepMeep;
+//import com.noahbres.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
+//import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence;
+//import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
+//import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
+
+import java.awt.Image;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.awt.Toolkit;
+
+import static com.example.meepmeeptesting.Field.Park_Pos.*;
+import static com.example.meepmeeptesting.Field.Start_Pos.*;
+
+import org.rowlandhall.meepmeep.MeepMeep;
+import org.rowlandhall.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
+import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
+import org.rowlandhall.meepmeep.roadrunner.trajectorysequence.TrajectorySequence;
+import org.rowlandhall.meepmeep.roadrunner.DefaultBotBuilder;
+
+
+public class MeepMeepTesting
+{
+     private static final float X_WIDTH = 141.0f;
+     private static final float Y_WIDTH = 141.0f;
+     /* package */ static final float N_WALL_Y = Y_WIDTH/2.0f;
+     /* package */ static final float E_WALL_X = X_WIDTH/2.0f;
+     /* package */ static final float S_WALL_Y = -N_WALL_Y;
+     /* package */ static final float W_WALL_X = -E_WALL_X;
+
+     protected static final float tileWidth        = 23.5f;
+     protected static final float oneTile          = tileWidth;
+     protected static final float halfTile         = tileWidth/2.0f;
+     protected static final float oneAndHalfTile   = 3.0f*tileWidth/2.0f;
+     protected static final float halfField        = X_WIDTH/2.0f;
+     protected static final float quadField        = X_WIDTH/4.0f;
+     protected static final float mmTargetHeight   = 6.0f;
+
+     // 2026-2027 BIOBUZZ field.  Previous season: "/field-2025-juice-dark.png" (DECODE)
+     private static final String FIELD_IMAGE = "/field-2026-biobuzz.png";
+
+     public static void main(String[] args)
+     {
+         // TODO: If you experience poor performance, enable this flag
+         // System.setProperty("sun.java2d.opengl", "true");
+
+         // Declare a MeepMeep instance
+         // With a field size of 800 pixels
+
+         RobotConstants.init(RobotConstants.Chassis.B7252);
+
+
+         RobotConstants.MAX_LOOPS = 1;
+         DECODE_Route ffr = new DECODE_Route( START_GOAL_RED5,INSIDEPRIMARYPARK1RED, Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP,Field.Num_shots.THREE) ;
+
+         TrajectorySequence seq = ffr.fullSeq;
+
+         MeepMeep meepMeep = new MeepMeep(600);
+
+         DefaultBotBuilder myBot = new DefaultBotBuilder(meepMeep)
+                 .setColorScheme(new ColorSchemeRedDark())
+                 .setDimensions(RobotConstants.BOT_WID, RobotConstants.BOT_LEN)
+                 .setConstraints(50, 50,Math.toRadians(180), Math.toRadians(180),12);
+
+         RoadRunnerBotEntity rrBotEntity = myBot.followTrajectorySequence(seq);
+//         rrBotEntity.followTrajectorySequence(seq);
+
+//         PPlayRoute ffr2 = new PPlayRoute(START_RIGHT, CENTER_PARK, Field.Alliance.BLUE);
+//       TrajectorySequence seq2 = ffr2.fullSeq;				 
+
+//         DefaultBotBuilder myBot2 = new DefaultBotBuilder(meepMeep)
+//                 .setColorScheme(new ColorSchemeRedDark())
+//                 .setDimensions(18, 20)
+//                 .setConstraints(50, 50,Math.toRadians(180), Math.toRadians(180),12);
+
+
+//         RoadRunnerBotEntity rrBotEntity2 = myBot2.build();
+//         rrBotEntity2.followTrajectorySequence(seq2);
+
+         System.out.println("STARTING at " +LocalDateTime.now());
+
+         // Field images live in src/main/resources.  Swap FIELD_IMAGE to change fields.
+         URL imageUrl = MeepMeepTesting.class.getResource(FIELD_IMAGE);
+         if (imageUrl == null)
+         {
+             throw new IllegalStateException("Field image not found on classpath: " + FIELD_IMAGE);
+         }
+         Image background = Toolkit.getDefaultToolkit().getImage(imageUrl);
+         meepMeep.setBackground(background)
+                 .setDarkMode(true)
+                 .setBackgroundAlpha(0.95f)
+                 .addEntity(rrBotEntity)
+                 //s.addEntity(rrBotEntity2)
+                 .start(); /* Executes the sequences */
+       }
+}

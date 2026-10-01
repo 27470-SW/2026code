@@ -8,3 +8,6 @@ pluginManagement {
 
 include ':FtcRobotController'
 include ':TeamCode'
+
+// Desktop Road Runner path visualizer (plain Java, runs on any PC with a JDK)
+include ':MeepMeepTesting'
