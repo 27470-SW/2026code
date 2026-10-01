@@ -6,6 +6,10 @@ pluginManagement {
     }
 }
 
+// Fixed name so Android Studio module names (used by the shared run
+// configurations in .run/) are the same no matter what folder this is cloned into.
+rootProject.name = '2026code'
+
 include ':FtcRobotController'
 include ':TeamCode'
 

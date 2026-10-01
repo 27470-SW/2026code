@@ -19,8 +19,9 @@ cd MeepMeepTesting
 ../gradlew run          # Windows: ..\gradlew.bat run
 ```
 
-In Android Studio you can also open `MeepMeepTesting/src/main/java/com/example/meepmeeptesting/MeepMeepTesting.java`
-and click the green Run arrow next to `main`.
+In Android Studio, pick **MeepMeepTestiing** from the run configuration dropdown (next to the green Run arrow)
+and press Run. Pick **TeamCode** to build and deploy the robot app to the Control Hub. These configurations
+are shared in the `.run/` folder, so they show up automatically after Gradle sync.
 
 The field image is set by `FIELD_IMAGE` in `MeepMeepTesting.java`. Images live in
 `MeepMeepTesting/src/main/resources/` (`field-2026-biobuzz.png`, plus last year's `field-2025-juice-dark.png`).
