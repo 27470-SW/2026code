@@ -1,3 +1,49 @@
+# Team 27470 — 2026-2027 BIOBUZZ Robot Code
+
+This repo is the official [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcRobotController)
+(v12.0, BIOBUZZ) with our team code from [2025code](https://github.com/27470-SW/2025code) on top.
+
+| Folder | What it is |
+| --- | --- |
+| `TeamCode/` | Our robot code (OpModes, Road Runner 0.5 routes, vision, etc.) |
+| `MeepMeepTesting/` | Desktop Road Runner path visualizer with the BIOBUZZ field image |
+| `FtcRobotController/` | FTC SDK — avoid editing |
+| `GRIP/`, `GettingStarted/` | Vision pipeline experiments and season setup notes |
+
+## Running MeepMeep (any PC with Java 17+)
+
+MeepMeep is plain Java, so it does not need Android Studio or the Android SDK:
+
+```
+cd MeepMeepTesting
+../gradlew run          # Windows: ..\gradlew.bat run
+```
+
+In Android Studio you can also open `MeepMeepTesting/src/main/java/com/example/meepmeeptesting/MeepMeepTesting.java`
+and click the green Run arrow next to `main`.
+
+The field image is set by `FIELD_IMAGE` in `MeepMeepTesting.java`. Images live in
+`MeepMeepTesting/src/main/resources/` (`field-2026-biobuzz.png`, plus last year's `field-2025-juice-dark.png`).
+
+## Updating the FTC SDK
+
+The SDK was merged in with its git history, so a new SDK release can be pulled in with:
+
+```
+git remote add upstream https://github.com/FIRST-Tech-Challenge/FtcRobotController.git   # once
+git pull upstream master
+```
+
+## Notes on the SDK 12 upgrade
+
+* SDK 12 added AprilTag *clusters*. `AprilTagProcessor.getDetections()` now returns `AprilTagDetection`
+  objects that are either `AprilTagSingleDetection` or `AprilTagClusterDetection`. Our AprilTag loops were
+  updated to only use `AprilTagSingleDetection` (see the SDK release notes below).
+* `getCurrentGameTagLibrary()` now returns the BIOBUZZ tags, and the SDK notes that BIOBUZZ tags move,
+  so they are not suitable for field localization.
+
+---
+
 ## NOTICE
 
 This repository contains the public FTC SDK for the BIOBUZZ (2026-2027) competition season.
