@@ -74,13 +74,13 @@ public class RobotConstants
   public static double IN_ACT_DIST = 3.0;
   public static double MOVEMENTFORSPEEDOFTRAJ = 200;
 
-  public static double TRANSITION_RESTPOINT1 = .4;
+  public static double TRANSITION_RESTPOINT1 = .58;
   public static double TRANSITION_RESTPOINT2 = 0.00;
   public static double TRANSITION_RESTPOINT3 = .51;
 //    public static double TRANSITION_RESTPOINT1 = .43;
 //    public static double TRANSITION_RESTPOINT2 = .25;
 //    public static double TRANSITION_RESTPOINT3 = .35;
-  public static double TRANSITION_MOVEMENT = .2;
+  public static double TRANSITION_MOVEMENT = .41;
   public static  double SHOOTER_KP = 0.03;
   public static  double SHOOTER_KI = 0.000016;
   public static  double SHOOTER_KD = 0.0005;
@@ -100,7 +100,7 @@ public class RobotConstants
   public final static int GPP_APRIL_TAG = 21;
   public final static int PGP_APRIL_TAG = 22;
   public final static int PPG_APRIL_TAG = 23;
-  public static  double SHOOTER_VELOCITY = 1250;
+  public static  double SHOOTER_VELOCITY = 1300;
   public static int SHOOT_CLOSE_TRAJ = -400;
   public static int SHOOT_FAR_TRAJ = -1250;
     public static double SHOOT_SERVO_FAR = 0.62;

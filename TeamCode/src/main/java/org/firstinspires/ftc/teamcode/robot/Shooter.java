@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -53,7 +54,7 @@ public class Shooter
         try
         {
             shooterW = hwMap.get(DcMotorEx.class, "shoot");
-            shooterW.setDirection(DcMotor.Direction.FORWARD);
+            shooterW.setDirection(DcMotor.Direction.REVERSE);
             shooterW.setPower(0);
             shooterW.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             shooterW.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -63,7 +64,7 @@ public class Shooter
             controlShooterW.init(SHOOTER_KP, SHOOTER_KI, SHOOTER_KD, SHOOTER_KF);
 
             shooterW2 = hwMap.get(DcMotorEx.class, "shoot2");
-            shooterW2.setDirection(DcMotor.Direction.FORWARD);
+            shooterW2.setDirection(DcMotor.Direction.REVERSE);
             shooterW2.setPower(0);
             shooterW2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             shooterW2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -111,7 +112,7 @@ public class Shooter
         shooter1 = new Transition("shooter1", hwMap);
     //    shooter2 = new Transition("shooter2", hwMap);
     //    shooter3 = new Transition("shooter3", hwMap);
-        if(shooter1 != null) shooter1.init(TRANSITION_RESTPOINT1, true);
+        if(shooter1 != null) shooter1.init(TRANSITION_RESTPOINT1, false);
     //    if(shooter2 != null) shooter2.init(TRANSITION_RESTPOINT2, true);
     //    if(shooter3 != null) shooter3.init(TRANSITION_RESTPOINT3, false);
 
@@ -238,7 +239,7 @@ public void stopWheel(){
     }
 
     boolean usePIDs = true;
-    boolean useDistance = true;
+    boolean useDistance = false;
     public double distanceWVelocity( double distance){
         if(ballCount == 1) {
             return DWV_M1 * (distance + DWV_K1) + DWV_B1;
@@ -251,6 +252,7 @@ public void stopWheel(){
 
 
     boolean atTargetVel(){
+        RobotLog.dd(TAG, "targetV = %f, currentV = %f, DISTANCE = %f", controlShooterW.targetVelocity, controlShooterW.getVelocity(), DISTANCEBETWEENCANDT);
         if(Math.abs(controlShooterW.targetVelocity - controlShooterW.getVelocity()) <= DISTANCEBETWEENCANDT ){
 
             return true;
@@ -424,18 +426,19 @@ public void stopWheel(){
 
     public void shoot(BALL_CHOICE ball, boolean force){
         wheelGuardsUp();
+        RobotLog.dd(TAG, "trying to shoot, ");
         if (atTargetVel() || force) {
-            switch (ball) {
-                case LEFT:
+//            switch (ball) {
+//                case LEFT:
                     shooter1.startTransition();
-                    break;
-                case CENTER:
-                    shooter2.startTransition();
-                    break;
-                case RIGHT:
-                    shooter3.startTransition();
-                    break;
-            }
+//                    break;
+//                case CENTER:
+//                    shooter2.startTransition();
+//                    break;
+//                case RIGHT:
+//                    shooter3.startTransition();
+//                    break;
+//            }
         } else{
 
         }
