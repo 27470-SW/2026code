@@ -1901,31 +1901,30 @@ public void moveToPosition4(){
               {
                   if (null != pendingSlow)
                   {
-                      if (pendingSlow <= 0)
-                          traj = new TrajectorySequenceBuilder(
-                                  lastPose,
-                                  slwVelLim, slwAccelLim,
-                                  RobotConstants.SLW_ANG_VEL, RobotConstants.SLW_ANG_ACCEL);
+                      if (pendingSlow <= 0) {
+                          traj.setConstraints(slwVelLim, slwAccelLim);
+                          traj.setTurnConstraint(RobotConstants.SLW_ANG_VEL, RobotConstants.SLW_ANG_ACCEL);
+                      }
                       else {
-                          TrajectoryVelocityConstraint vc =
+                          traj.setConstraints(
                                   new MinVelocityConstraint(Arrays.asList(
-                                          new AngularVelocityConstraint(pendingSlow / MAX_VEL * MAX_ANG_VEL),
-                                          new MecanumVelocityConstraint(pendingSlow, DT_TRACK_WIDTH)
-                                  ));
-                          TrajectoryAccelerationConstraint ac = new ProfileAccelerationConstraint(pendingSlow / MAX_VEL * MAX_ACCEL);
-                          traj = new TrajectorySequenceBuilder(
-                                  lastPose,
-                                  vc, ac,
-                                  pendingSlow, pendingSlow / MAX_VEL * RobotConstants.MAX_ANG_ACCEL);
+                                          new AngularVelocityConstraint(pendingSlow * MAX_ANG_VEL),
+                                          new MecanumVelocityConstraint(pendingSlow * MAX_VEL, DT_TRACK_WIDTH))),
+                                  new ProfileAccelerationConstraint(pendingSlow * MAX_ACCEL));
+                          traj.setTurnConstraint(pendingSlow * MAX_ANG_VEL, pendingSlow * RobotConstants.MAX_ANG_ACCEL);
                       }
                       pendingSlow = null;
+                  }
+                  else{
+                      traj.resetConstraints();
+                      traj.resetTurnConstraint();
                   }
                   if (pendingTangent != null) {
                       traj.setTangent(pendingTangent);
                       pendingTangent = null;
                   }
-                  else {    //resets default tangent value
-                      traj.setReversed(false);
+                  else {    //resets default tangent value, so it only ever applies to one location
+                      traj.clearTangent();
                   }
               }
 
@@ -2195,7 +2194,7 @@ public void moveToPosition4(){
                   newTraj = false;
                   traj.setTangent(value);
            */
-                  RobotLog.dd(TAG, "Setting tangent as %d", value);
+                  RobotLog.dd(TAG, "Setting tangent as %f", value);
                   pendingTangent = value;
                   break;
               case SLOW:

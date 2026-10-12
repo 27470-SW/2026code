@@ -323,6 +323,12 @@ public class TrajectorySequenceBuilder {
         return this;
     }
 
+    public TrajectorySequenceBuilder clearTangent() {
+        setAbsoluteTangent = false;
+        tangentOffset = 0.0;
+        return this;
+    }
+
     public TrajectorySequenceBuilder setReversed(boolean reversed) {
         return reversed ? this.setTangentOffset(Math.toRadians(180.0)) : this.setTangentOffset(0.0);
     }
