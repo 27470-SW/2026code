@@ -1883,7 +1883,8 @@ public void moveToPosition4(){
              }
              if(newTraj)
   	         {
-	           makeNewTraj();  newTraj = false;
+	           makeNewTraj();
+               newTraj = false;
 	         }
              else if(autonDebug == Field.AutonDebug.ENABLE)
 	         {
@@ -1896,6 +1897,37 @@ public void moveToPosition4(){
 		         //when not in debug, default to false unless something set it to true;
 	         }
 
+              if (move != Movement.START)
+              {
+                  if (null != pendingSlow)
+                  {
+                      if (pendingSlow <= 0)
+                          traj = new TrajectorySequenceBuilder(
+                                  lastPose,
+                                  slwVelLim, slwAccelLim,
+                                  RobotConstants.SLW_ANG_VEL, RobotConstants.SLW_ANG_ACCEL);
+                      else {
+                          TrajectoryVelocityConstraint vc =
+                                  new MinVelocityConstraint(Arrays.asList(
+                                          new AngularVelocityConstraint(pendingSlow / MAX_VEL * MAX_ANG_VEL),
+                                          new MecanumVelocityConstraint(pendingSlow, DT_TRACK_WIDTH)
+                                  ));
+                          TrajectoryAccelerationConstraint ac = new ProfileAccelerationConstraint(pendingSlow / MAX_VEL * MAX_ACCEL);
+                          traj = new TrajectorySequenceBuilder(
+                                  lastPose,
+                                  vc, ac,
+                                  pendingSlow, pendingSlow / MAX_VEL * RobotConstants.MAX_ANG_ACCEL);
+                      }
+                      pendingSlow = null;
+                  }
+                  if (pendingTangent != null) {
+                      traj.setTangent(pendingTangent);
+                      pendingTangent = null;
+                  }
+                  else {    //resets default tangent value
+                      traj.setReversed(false);
+                  }
+              }
 
              switch(move)
   	         {
@@ -2144,6 +2176,9 @@ public void moveToPosition4(){
           traj.addTemporalMarker(time, callback);
      }
 
+     private Double pendingTangent = null;
+     private Double pendingSlow = null;
+
      public void addEvent(Action act, double value)
      {
           switch(act)
@@ -2152,16 +2187,19 @@ public void moveToPosition4(){
                   traj.waitSeconds(value);
                   break;
               case TANGENT:
-                  try{          //cath error when trying to add tangent to first trajectory. TODO: make this not needed
+          /*        try{          //cath error when trying to add tangent to first trajectory. TODO: make this not needed
 				      makeNewTraj();
 			      }catch(Exception e){
 
                   }
                   newTraj = false;
                   traj.setTangent(value);
+           */
+                  RobotLog.dd(TAG, "Setting tangent as %d", value);
+                  pendingTangent = value;
                   break;
               case SLOW:
-                  try{  //Need to make a new traj in order to make this one slow
+        /*          try{  //Need to make a new traj in order to make this one slow
                       makeNewTraj();
                   }catch (Exception e){}    //error if that traj didn't have anything in it yet
                   RobotLog.dd(TAG, "Setting traj as SLOW");
@@ -2184,6 +2222,8 @@ public void moveToPosition4(){
                               vc, ac,
                               value, value/MAX_VEL*RobotConstants.MAX_ANG_ACCEL);
                   }
+         */
+                  pendingSlow = value;
                   break;
 
           }
