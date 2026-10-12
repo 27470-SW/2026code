@@ -18,8 +18,10 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment.Traject
 import org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment.TurnSegment;
 import org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment.WaitSegment;
 
+import com.acmerobotics.roadrunner.util.Angle;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.opModes.Decode_Auton;
 import org.firstinspires.ftc.teamcode.robot.MecanumBot;
 import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
@@ -28,10 +30,13 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -1829,16 +1834,335 @@ public void moveToPosition4(){
 
     public void makeNewTraj()
     {
-        try {
-            if (null != traj) {
-                trajList.add(traj.build());
+        if (null == lastPose) return;   // nothing to split before the START location
+        closePiece();
+        openPiece(lastPose);
+    }
+
+    /* ==========================================================================================
+     * CONDITIONALS: waitUntil, ifBlock / elseIfBlock / elseBlock / endIf, whileBlock / endWhile
+     *
+     * The route is still built ONCE, at init, as pieces (trajList).  Alongside the pieces we
+     * build "program": a list of steps that the opmode walks through during the match.  This is
+     * the state machine: each step is a state, and each step says which step comes next.
+     *
+     *   RUN            drive one piece, then go to the next step
+     *   WAIT_UNTIL     hold still until the condition is true (or timeout), then go to the next step
+     *   JUMP_IF_FALSE  check the condition once: true -> next step, false -> step "target"
+     *   JUMP           go to step "target" (end of an if branch, bottom of a while loop)
+     *
+     * A route without any conditionals is just RUN piece 0, RUN piece 1, ... exactly like before.
+     *
+     * Rule (checked here, at init): a piece can only start where the robot actually is.  So
+     *   - a whileBlock body must end where the loop started, and
+     *   - code after endIf requires every way through the if to end at the same spot.
+     * ========================================================================================== */
+
+    /** A yes/no question the route can ask during the match, e.g. route::motifFound */
+    public interface Condition
+    {
+        boolean check();
+    }
+
+    public enum StepType { RUN, WAIT_UNTIL, JUMP_IF_FALSE, JUMP }
+
+    public static class Step
+    {
+        public final StepType type;
+        public final int piece;             // RUN: index into trajList
+        public final Condition condition;   // WAIT_UNTIL, JUMP_IF_FALSE
+        public final double timeoutSec;     // WAIT_UNTIL
+        public int target = -1;             // JUMP_IF_FALSE, JUMP: index of the step to go to
+        public final String label;          // for the log
+
+        Step(StepType type, int piece, Condition condition, double timeoutSec, String label)
+        {
+            this.type = type;
+            this.piece = piece;
+            this.condition = condition;
+            this.timeoutSec = timeoutSec;
+            this.label = label;
+        }
+    }
+
+    /** The state machine the opmode runs (see Decode_Auton.doAuton). */
+    public final List<Step> program = new ArrayList<>();
+
+    /** Set by the opmode before running, so conditions can use the camera, match timer, etc. */
+    public Decode_Auton opMode;
+
+    private enum BlockType { IF, WHILE }
+
+    private static class Block
+    {
+        final BlockType type;
+        final Pose2d startPose;
+        final int topStep;                       // whileBlock: the condition step to loop back to
+        int pendingJumpIfFalse = -1;             // condition step whose target is not known yet
+        final List<Integer> jumpsToEnd = new ArrayList<>();
+        final List<Pose2d> branchEnds = new ArrayList<>();   // null = branch has no single end spot
+        final List<String> branchNames = new ArrayList<>();
+        boolean hasElse = false;
+        String currentBranch;
+
+        Block(BlockType type, Pose2d startPose, int topStep, String currentBranch)
+        {
+            this.type = type;
+            this.startPose = startPose;
+            this.topStep = topStep;
+            this.currentBranch = currentBranch;
+        }
+    }
+
+    private final Deque<Block> blocks = new ArrayDeque<>();
+
+    /* Set after an endIf whose branches end in different places: nothing may follow it. */
+    private String deadEndReason = null;
+
+    /** Hold still (robot is stopped here) until the condition is true or timeoutSec passes. */
+    public void waitUntil(Condition condition, double timeoutSec)
+    {
+        startBlockBoundary("waitUntil");
+        addStep(new Step(StepType.WAIT_UNTIL, -1, condition, timeoutSec,
+                String.format(Locale.US, "waitUntil (max %.1f s)", timeoutSec)));
+        openPiece(lastPose);
+    }
+
+    /** Check the condition once (robot is stopped here); run this block only if it is true. */
+    public void ifBlock(Condition condition)
+    {
+        startBlockBoundary("ifBlock");
+        Block b = new Block(BlockType.IF, lastPose, program.size(), "ifBlock");
+        b.pendingJumpIfFalse = addStep(new Step(StepType.JUMP_IF_FALSE, -1, condition, 0, "ifBlock"));
+        blocks.push(b);
+        openPiece(b.startPose);
+    }
+
+    public void elseIfBlock(Condition condition)
+    {
+        Block b = currentBlock(BlockType.IF, "elseIfBlock");
+        if (b.hasElse)
+            throw new IllegalStateException("elseIfBlock can't come after elseBlock.");
+        endBranch(b, true);
+        program.get(b.pendingJumpIfFalse).target = program.size();
+        b.pendingJumpIfFalse = addStep(new Step(StepType.JUMP_IF_FALSE, -1, condition, 0, "elseIfBlock"));
+        b.currentBranch = "elseIfBlock";
+        openPiece(b.startPose);
+    }
+
+    public void elseBlock()
+    {
+        Block b = currentBlock(BlockType.IF, "elseBlock");
+        if (b.hasElse)
+            throw new IllegalStateException("An ifBlock can only have one elseBlock.");
+        endBranch(b, true);
+        program.get(b.pendingJumpIfFalse).target = program.size();
+        b.pendingJumpIfFalse = -1;
+        b.hasElse = true;
+        b.currentBranch = "elseBlock";
+        openPiece(b.startPose);
+    }
+
+    public void endIf()
+    {
+        Block b = currentBlock(BlockType.IF, "endIf");
+        endBranch(b, false);
+        blocks.pop();
+
+        int end = program.size();
+        if (b.pendingJumpIfFalse >= 0) program.get(b.pendingJumpIfFalse).target = end;
+        for (int j : b.jumpsToEnd) program.get(j).target = end;
+
+        if (!b.hasElse)
+        {
+            // Without an elseBlock, "condition false" means: skip the block, stay where we were.
+            b.branchEnds.add(b.startPose);
+            b.branchNames.add("skipping the ifBlock (there is no elseBlock)");
+        }
+
+        // Code after endIf needs every way through the if to end at the same spot.
+        String why = null;
+        Pose2d common = b.branchEnds.get(0);
+        for (int i = 0; i < b.branchEnds.size() && why == null; i++)
+        {
+            Pose2d p = b.branchEnds.get(i);
+            if (p == null)
+                why = "the " + b.branchNames.get(i) + " part has its own ifBlock whose branches end in different places";
+            else if (!posesMatch(p, common))
+                why = "the " + b.branchNames.get(0) + " part ends at " + fmt(common)
+                        + " but the " + b.branchNames.get(i) + " part ends at " + fmt(p);
+        }
+
+        if (why == null)
+        {
+            openPiece(common);
+        }
+        else
+        {
+            deadEndReason = "Nothing can come after this endIf: " + why
+                    + ". Either make every way through the ifBlock end at the same location,"
+                    + " or put the rest of the route inside each part.";
+            traj = null;
+        }
+    }
+
+    /** Repeat the block while the condition is true. Checked before every lap, robot stopped. */
+    public void whileBlock(Condition condition)
+    {
+        startBlockBoundary("whileBlock");
+        Block b = new Block(BlockType.WHILE, lastPose, program.size(), "whileBlock");
+        b.pendingJumpIfFalse = addStep(new Step(StepType.JUMP_IF_FALSE, -1, condition, 0, "whileBlock"));
+        blocks.push(b);
+        openPiece(b.startPose);
+    }
+
+    public void endWhile()
+    {
+        Block b = currentBlock(BlockType.WHILE, "endWhile");
+        checkNoPending("endWhile");
+        closePiece();
+        if (deadEndReason != null)
+            throw new IllegalStateException(
+                    "Everything inside a whileBlock must come back to where the loop started. " + deadEndReason);
+        if (!posesMatch(lastPose, b.startPose))
+            throw new IllegalStateException("The whileBlock starts at " + fmt(b.startPose)
+                    + " but its last location is " + fmt(lastPose)
+                    + ". The robot must end each lap where the loop started, so the next lap can begin.");
+        blocks.pop();
+
+        Step back = new Step(StepType.JUMP, -1, null, 0, "endWhile (back to whileBlock)");
+        back.target = b.topStep;
+        addStep(back);
+        program.get(b.pendingJumpIfFalse).target = program.size();
+        openPiece(b.startPose);
+    }
+
+    /** Condition: true once the AprilTag motif has been seen (stays true after that). */
+    public boolean motifFound()
+    {
+        try
+        {
+            return null != opMode && opMode.detectAprilTag();
+        }
+        catch (Exception e)
+        {
+            RobotLog.ee(TAG, "motifFound failed: %s", e.toString());
+            return false;
+        }
+    }
+
+    private int addStep(Step s)
+    {
+        program.add(s);
+        return program.size() - 1;
+    }
+
+    /** Every finished piece goes through here: into trajList, plus a RUN step in the program. */
+    private void addPiece(TrajectorySequence seq)
+    {
+        if (null == trajList) trajList = new ArrayList<TrajectorySequence>();
+        trajList.add(seq);
+        int idx = trajList.size() - 1;
+        addStep(new Step(StepType.RUN, idx, null, 0, "drive piece " + idx));
+    }
+
+    /** Finish the current piece (if it has anything in it). Never throws on an empty piece. */
+    private void closePiece()
+    {
+        if (null != traj && !traj.isEmpty())
+        {
+            addPiece(traj.build());
+        }
+        traj = null;
+    }
+
+    private void openPiece(Pose2d from)
+    {
+        lastPose = from;
+        traj = new TrajectorySequenceBuilder(
+                from,
+                defVelLim, defAccelLim,
+                RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
+    }
+
+    private void checkReachable()
+    {
+        if (null != deadEndReason) throw new IllegalStateException(deadEndReason);
+    }
+
+    private void checkNoPending(String what)
+    {
+        if (null != pendingSlow || null != pendingTangent)
+            throw new IllegalStateException("A SLOW or TANGENT right before " + what
+                    + " has no location to apply to. Put it right before the addLocation it is for.");
+    }
+
+    private void startBlockBoundary(String what)
+    {
+        checkReachable();
+        if (null == lastPose)
+            throw new IllegalStateException(what + " must come after the START location.");
+        checkNoPending(what);
+        closePiece();
+    }
+
+    private Block currentBlock(BlockType type, String what)
+    {
+        if (blocks.isEmpty() || blocks.peek().type != type)
+            throw new IllegalStateException(what + " without a matching "
+                    + (type == BlockType.IF ? "ifBlock" : "whileBlock") + ".");
+        return blocks.peek();
+    }
+
+    /** Close the current branch of an ifBlock and remember where it ends. */
+    private void endBranch(Block b, boolean jumpToEnd)
+    {
+        checkNoPending(b.currentBranch + " end");
+        closePiece();
+        b.branchEnds.add(null == deadEndReason ? lastPose : null);
+        b.branchNames.add(b.currentBranch);
+        deadEndReason = null;   // the next branch is reachable again
+        if (jumpToEnd)
+        {
+            b.jumpsToEnd.add(addStep(new Step(StepType.JUMP, -1, null, 0, "end of " + b.currentBranch)));
+        }
+    }
+
+    private static boolean posesMatch(Pose2d a, Pose2d b)
+    {
+        return Math.abs(a.getX() - b.getX()) < 0.5
+                && Math.abs(a.getY() - b.getY()) < 0.5
+                && Math.abs(Angle.normDelta(a.getHeading() - b.getHeading())) < Math.toRadians(1.0);
+    }
+
+    private static String fmt(Pose2d p)
+    {
+        return String.format(Locale.US, "(x %.1f, y %.1f, heading %.0f deg)",
+                p.getX(), p.getY(), Math.toDegrees(p.getHeading()));
+    }
+
+    /** Log the state machine, one step per line. */
+    public void printProgram()
+    {
+        for (int i = 0; i < program.size(); i++)
+        {
+            Step s = program.get(i);
+            switch (s.type)
+            {
+                case RUN:
+                    TrajectorySequence seq = trajList.get(s.piece);
+                    RobotLog.dd(TAG, "step %d: %s  %s -> %s", i, s.label, fmt(seq.start()), fmt(seq.end()));
+                    break;
+                case WAIT_UNTIL:
+                    RobotLog.dd(TAG, "step %d: %s", i, s.label);
+                    break;
+                case JUMP_IF_FALSE:
+                    RobotLog.dd(TAG, "step %d: %s: if false go to step %d", i, s.label, s.target);
+                    break;
+                case JUMP:
+                    RobotLog.dd(TAG, "step %d: %s: go to step %d", i, s.label, s.target);
+                    break;
             }
-            traj = new TrajectorySequenceBuilder(
-                    lastPose,
-                    defVelLim, defAccelLim,
-                    RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
-        }catch(Exception e){
-			RobotLog.ww(TAG, "Error in makeNewTraj...not sure why.");
         }
     }
 
@@ -1872,6 +2196,7 @@ public void moveToPosition4(){
 
     public void addLocation(Pose2d loc, Movement move, Heading head, boolean custom, double customHeadValue)
     {
+        checkReachable();
         RobotLog.dd(TAG, "adding Location: x:%f, y:%f, h:%f, move:%s,head:%s", loc.getX(), loc.getY(), Math.toDegrees(loc.getHeading()), move, head);
         if(null != lastPose)
   	    {
@@ -1879,7 +2204,7 @@ public void moveToPosition4(){
              if(justStarted)
   	         {
                  justStarted = false;
-                 trajList = new ArrayList<TrajectorySequence>();
+                 if (null == trajList) trajList = new ArrayList<TrajectorySequence>();
              }
              if(newTraj)
   	         {
@@ -2008,6 +2333,7 @@ public void moveToPosition4(){
 
      public void addMovement(Movement move, Double amount)
      {
+          checkReachable();
           switch (move)
   	      {
                case STRAFE_RIGHT:
@@ -2167,12 +2493,24 @@ public void moveToPosition4(){
 
      public void addFunction(MarkerCallback callback)
      {
+          checkReachable();
+          anchorFunctions();
           traj.addTemporalMarker(callback);
      }
 
      public void addFunction(MarkerCallback callback, double time)
      {
+          checkReachable();
+          anchorFunctions();
           traj.addTemporalMarker(time, callback);
+     }
+
+     /* A function needs something in its piece to attach to.  If the piece is still empty
+      * (e.g. right after START, waitUntil, ifBlock or elseBlock), add a zero-length wait so
+      * the function always runs, even if no move follows it. */
+     private void anchorFunctions()
+     {
+          if (traj.isEmpty()) traj.waitSeconds(0);
      }
 
      private Double pendingTangent = null;
@@ -2180,6 +2518,7 @@ public void moveToPosition4(){
 
      public void addEvent(Action act, double value)
      {
+          checkReachable();
           switch(act)
   	      {
               case WAIT:
@@ -2238,7 +2577,8 @@ public void moveToPosition4(){
   	     {
              addLocation(trajectory.start(), Movement.SPLINE, Heading.HEAD_SPLINE);
          }
-         trajList.add(trajectory);
+         closePiece();
+         addPiece(trajectory);
          lastPose = trajectory.end();
          newTraj = true;
     }
@@ -2265,14 +2605,16 @@ public void moveToPosition4(){
     public void finalizeTrajSeq()
     {
         RobotLog.dd(TAG, "finalizing a TrajSeq");
+        if (!blocks.isEmpty())
+        {
+            throw new IllegalStateException("The route ends inside a "
+                    + (blocks.peek().type == BlockType.IF ? "ifBlock: add endIf()" : "whileBlock: add endWhile()") + ".");
+        }
+        closePiece();   // the last piece (skipped if empty, e.g. after an endIf with no common end)
         /* Finalize Traj Seq */
         if(null != trajList)
 	    {
             RobotLog.dd(TAG,"trajList does not = null");
-             if(null != traj)
-	         {
-                 trajList.add(traj.build());
-             }
              if(null != fullSeq)
 	         {
                  addTrajectory(fullSeq);
@@ -2288,7 +2630,7 @@ public void moveToPosition4(){
              int seqNum = 0;
              TrajectorySequence parkTraj = parkMap.get(parkPos);
              if(null != parkTraj) {
-                 trajList.add(parkTraj);
+                 addPiece(parkTraj);
              }
 
              for (TrajectorySequence tSeq : trajList)
@@ -2350,6 +2692,7 @@ public void moveToPosition4(){
                     }
              }
          fullSeq = full.build();
+         printProgram();
          }
     }
 

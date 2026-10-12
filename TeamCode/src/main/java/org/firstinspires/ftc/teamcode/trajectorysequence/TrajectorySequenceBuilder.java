@@ -329,6 +329,11 @@ public class TrajectorySequenceBuilder {
         return this;
     }
 
+    /** True when nothing (no move, wait or turn) has been added yet; build() would throw. */
+    public boolean isEmpty() {
+        return sequenceSegments.isEmpty() && currentTrajectoryBuilder == null;
+    }
+
     public TrajectorySequenceBuilder setReversed(boolean reversed) {
         return reversed ? this.setTangentOffset(Math.toRadians(180.0)) : this.setTangentOffset(0.0);
     }

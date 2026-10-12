@@ -915,26 +915,79 @@ boolean    printOnce = true;
     public void doAuton(Route autonRoute)
     {
         RobotLog.dd(TAG, "In doAuton");
-        int trajNum = 0;
 
-        if(null != autonRoute.trajList)
+        if(null == autonRoute.trajList || autonRoute.program.isEmpty())
         {
-            resetBotLocation(autonRoute.trajList.get(0).start());
-            for (TrajectorySequence tSeq : autonRoute.trajList)
+            RobotLog.dd(TAG, "Route has nothing to run");
+            return;
+        }
+
+        autonRoute.opMode = this;   // lets conditions such as route::motifFound use the camera
+        Pose2d startPose = autonRoute.getStart();
+        resetBotLocation(null != startPose ? startPose : autonRoute.trajList.get(0).start());
+
+        /* Walk the route's state machine.  Without conditionals this is simply
+         * "drive piece 0, drive piece 1, ..." in order, like before. */
+        int step = 0;
+        while (opModeIsActive() && step >= 0 && step < autonRoute.program.size())
+        {
+            Route.Step s = autonRoute.program.get(step);
+            switch (s.type)
             {
-                trajNum++;
+                case RUN:
+                    String seqName = String.format(Locale.US, "Seq %d", s.piece + 1);
+                    dashboard.displayText(4, seqName);
+                    performTrajSeq(autonRoute.trajList.get(s.piece), seqName);
+                    step++;
+                    break;
 
-                String seqName = String.format(Locale.US, "Seq %d",
-                        trajNum);
-                dashboard.displayText(4, seqName);
+                case WAIT_UNTIL:
+                    boolean met = waitForCondition(s.condition, s.timeoutSec);
+                    RobotLog.ii(TAG, "step %d %s: %s", step, s.label, met ? "condition met" : "timed out");
+                    step++;
+                    break;
 
-                performTrajSeq(tSeq, seqName);
+                case JUMP_IF_FALSE:
+                    boolean result = checkCondition(s.condition);
+                    RobotLog.ii(TAG, "step %d %s: %b", step, s.label, result);
+                    step = result ? step + 1 : s.target;
+                    break;
+
+                case JUMP:
+                    step = s.target;
+                    // keep the robot updated even if a loop has nothing to drive
+                    robot.update();
+                    robot.finishFrame();
+                    break;
             }
         }
-        else
+    }
+
+    /** Ask a route condition; a condition that crashes counts as false instead of ending auton. */
+    private boolean checkCondition(Route.Condition c)
+    {
+        try
         {
-            RobotLog.dd(TAG, "trajList is null");
+            return c.check();
         }
+        catch (Exception e)
+        {
+            RobotLog.ee(TAG, "Condition failed (%s); treating it as false", e.toString());
+            return false;
+        }
+    }
+
+    /** Robot holds still; returns true as soon as the condition is true, false on timeout. */
+    private boolean waitForCondition(Route.Condition c, double timeoutSec)
+    {
+        ElapsedTime waitTimer = new ElapsedTime();
+        while (opModeIsActive() && waitTimer.seconds() < timeoutSec)
+        {
+            if (checkCondition(c)) return true;
+            robot.update();     // odometry, shooter, etc. keep running while we wait
+            robot.finishFrame();
+        }
+        return false;
     }
 
     private void doAutonParking(){
