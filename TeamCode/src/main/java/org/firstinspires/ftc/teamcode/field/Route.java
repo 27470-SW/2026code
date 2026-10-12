@@ -1846,10 +1846,10 @@ public void moveToPosition4(){
      * build "program": a list of steps that the opmode walks through during the match.  This is
      * the state machine: each step is a state, and each step says which step comes next.
      *
-     *   RUN            drive one piece, then go to the next step
-     *   WAIT_UNTIL     hold still until the condition is true (or timeout), then go to the next step
-     *   JUMP_IF_FALSE  check the condition once: true -> next step, false -> step "target"
-     *   JUMP           go to step "target" (end of an if branch, bottom of a while loop)
+     *   RUN    drive one piece, then go to the next step
+     *   CHECK  hold still and check the condition until it is true or timeoutSec passes
+     *          (timeoutSec 0 = check once):  true -> next step,  false/timeout -> step "target"
+     *   JUMP   go to step "target" (end of an if branch, bottom of a while loop)
      *
      * A route without any conditionals is just RUN piece 0, RUN piece 1, ... exactly like before.
      *
@@ -1864,15 +1864,15 @@ public void moveToPosition4(){
         boolean check();
     }
 
-    public enum StepType { RUN, WAIT_UNTIL, JUMP_IF_FALSE, JUMP }
+    public enum StepType { RUN, CHECK, JUMP }
 
     public static class Step
     {
         public final StepType type;
         public final int piece;             // RUN: index into trajList
-        public final Condition condition;   // WAIT_UNTIL, JUMP_IF_FALSE
-        public final double timeoutSec;     // WAIT_UNTIL
-        public int target = -1;             // JUMP_IF_FALSE, JUMP: index of the step to go to
+        public final Condition condition;   // CHECK
+        public final double timeoutSec;     // CHECK: how long to wait for true (0 = check once)
+        public int target = -1;             // CHECK (when false/timeout), JUMP: step to go to
         public final String label;          // for the log
 
         Step(StepType type, int piece, Condition condition, double timeoutSec, String label)
@@ -1898,7 +1898,7 @@ public void moveToPosition4(){
         final BlockType type;
         final Pose2d startPose;
         final int topStep;                       // whileBlock: the condition step to loop back to
-        int pendingJumpIfFalse = -1;             // condition step whose target is not known yet
+        int pendingCheck = -1;                   // CHECK step whose false target is not known yet
         final List<Integer> jumpsToEnd = new ArrayList<>();
         final List<Pose2d> branchEnds = new ArrayList<>();   // null = branch has no single end spot
         final List<String> branchNames = new ArrayList<>();
@@ -1923,29 +1923,41 @@ public void moveToPosition4(){
     public void waitUntil(Condition condition, double timeoutSec)
     {
         startBlockBoundary("waitUntil");
-        addStep(new Step(StepType.WAIT_UNTIL, -1, condition, timeoutSec,
+        int i = addStep(new Step(StepType.CHECK, -1, condition, timeoutSec,
                 String.format(Locale.US, "waitUntil (max %.1f s)", timeoutSec)));
+        program.get(i).target = i + 1;      // true or timeout: either way, carry on
         openPiece(lastPose);
     }
 
     /** Check the condition once (robot is stopped here); run this block only if it is true. */
     public void ifBlock(Condition condition)
     {
+        ifBlock(condition, 0);
+    }
+
+    /** Hold still up to timeoutSec waiting for the condition; run this block if it became true. */
+    public void ifBlock(Condition condition, double timeoutSec)
+    {
         startBlockBoundary("ifBlock");
         Block b = new Block(BlockType.IF, lastPose, program.size(), "ifBlock");
-        b.pendingJumpIfFalse = addStep(new Step(StepType.JUMP_IF_FALSE, -1, condition, 0, "ifBlock"));
+        b.pendingCheck = addStep(new Step(StepType.CHECK, -1, condition, timeoutSec, checkLabel("ifBlock", timeoutSec)));
         blocks.push(b);
         openPiece(b.startPose);
     }
 
     public void elseIfBlock(Condition condition)
     {
+        elseIfBlock(condition, 0);
+    }
+
+    public void elseIfBlock(Condition condition, double timeoutSec)
+    {
         Block b = currentBlock(BlockType.IF, "elseIfBlock");
         if (b.hasElse)
             throw new IllegalStateException("elseIfBlock can't come after elseBlock.");
         endBranch(b, true);
-        program.get(b.pendingJumpIfFalse).target = program.size();
-        b.pendingJumpIfFalse = addStep(new Step(StepType.JUMP_IF_FALSE, -1, condition, 0, "elseIfBlock"));
+        program.get(b.pendingCheck).target = program.size();
+        b.pendingCheck = addStep(new Step(StepType.CHECK, -1, condition, timeoutSec, checkLabel("elseIfBlock", timeoutSec)));
         b.currentBranch = "elseIfBlock";
         openPiece(b.startPose);
     }
@@ -1956,8 +1968,8 @@ public void moveToPosition4(){
         if (b.hasElse)
             throw new IllegalStateException("An ifBlock can only have one elseBlock.");
         endBranch(b, true);
-        program.get(b.pendingJumpIfFalse).target = program.size();
-        b.pendingJumpIfFalse = -1;
+        program.get(b.pendingCheck).target = program.size();
+        b.pendingCheck = -1;
         b.hasElse = true;
         b.currentBranch = "elseBlock";
         openPiece(b.startPose);
@@ -1970,7 +1982,7 @@ public void moveToPosition4(){
         blocks.pop();
 
         int end = program.size();
-        if (b.pendingJumpIfFalse >= 0) program.get(b.pendingJumpIfFalse).target = end;
+        if (b.pendingCheck >= 0) program.get(b.pendingCheck).target = end;
         for (int j : b.jumpsToEnd) program.get(j).target = end;
 
         if (!b.hasElse)
@@ -2011,7 +2023,7 @@ public void moveToPosition4(){
     {
         startBlockBoundary("whileBlock");
         Block b = new Block(BlockType.WHILE, lastPose, program.size(), "whileBlock");
-        b.pendingJumpIfFalse = addStep(new Step(StepType.JUMP_IF_FALSE, -1, condition, 0, "whileBlock"));
+        b.pendingCheck = addStep(new Step(StepType.CHECK, -1, condition, 0, "whileBlock"));
         blocks.push(b);
         openPiece(b.startPose);
     }
@@ -2033,7 +2045,7 @@ public void moveToPosition4(){
         Step back = new Step(StepType.JUMP, -1, null, 0, "endWhile (back to whileBlock)");
         back.target = b.topStep;
         addStep(back);
-        program.get(b.pendingJumpIfFalse).target = program.size();
+        program.get(b.pendingCheck).target = program.size();
         openPiece(b.startPose);
     }
 
@@ -2049,6 +2061,11 @@ public void moveToPosition4(){
             RobotLog.ee(TAG, "motifFound failed: %s", e.toString());
             return false;
         }
+    }
+
+    private static String checkLabel(String what, double timeoutSec)
+    {
+        return timeoutSec > 0 ? String.format(Locale.US, "%s (wait up to %.1f s)", what, timeoutSec) : what;
     }
 
     private int addStep(Step s)
@@ -2153,10 +2170,7 @@ public void moveToPosition4(){
                     TrajectorySequence seq = trajList.get(s.piece);
                     RobotLog.dd(TAG, "step %d: %s  %s -> %s", i, s.label, fmt(seq.start()), fmt(seq.end()));
                     break;
-                case WAIT_UNTIL:
-                    RobotLog.dd(TAG, "step %d: %s", i, s.label);
-                    break;
-                case JUMP_IF_FALSE:
+                case CHECK:
                     RobotLog.dd(TAG, "step %d: %s: if false go to step %d", i, s.label, s.target);
                     break;
                 case JUMP:

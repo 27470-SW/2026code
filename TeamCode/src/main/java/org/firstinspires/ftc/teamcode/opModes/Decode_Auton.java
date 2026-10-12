@@ -941,15 +941,10 @@ boolean    printOnce = true;
                     step++;
                     break;
 
-                case WAIT_UNTIL:
-                    boolean met = waitForCondition(s.condition, s.timeoutSec);
-                    RobotLog.ii(TAG, "step %d %s: %s", step, s.label, met ? "condition met" : "timed out");
-                    step++;
-                    break;
-
-                case JUMP_IF_FALSE:
-                    boolean result = checkCondition(s.condition);
-                    RobotLog.ii(TAG, "step %d %s: %b", step, s.label, result);
+                case CHECK:
+                    boolean result = waitForCondition(s.condition, s.timeoutSec);
+                    RobotLog.ii(TAG, "step %d %s: %s", step, s.label,
+                            result ? "true" : (s.timeoutSec > 0 ? "timed out" : "false"));
                     step = result ? step + 1 : s.target;
                     break;
 
@@ -977,17 +972,18 @@ boolean    printOnce = true;
         }
     }
 
-    /** Robot holds still; returns true as soon as the condition is true, false on timeout. */
+    /** Robot holds still; true as soon as the condition is true, false on timeout.
+     *  timeoutSec 0 = check once. */
     private boolean waitForCondition(Route.Condition c, double timeoutSec)
     {
         ElapsedTime waitTimer = new ElapsedTime();
-        while (opModeIsActive() && waitTimer.seconds() < timeoutSec)
+        while (true)
         {
             if (checkCondition(c)) return true;
+            if (!opModeIsActive() || waitTimer.seconds() >= timeoutSec) return false;
             robot.update();     // odometry, shooter, etc. keep running while we wait
             robot.finishFrame();
         }
-        return false;
     }
 
     private void doAutonParking(){
