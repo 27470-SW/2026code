@@ -4,9 +4,13 @@ plugins {
 }
 
 // MeepMeepTesting is a plain Java desktop app (no Android) for visualizing
-// Road Runner trajectories on the field.  Run it with:
-//   ./gradlew :MeepMeepTesting:run          (from the repo root, needs Android SDK configured)
-//   cd MeepMeepTesting && ../gradlew run    (standalone, only needs a JDK 17+)
+// Road Runner trajectories on the field.  Run it with the MeepMeepTesting run
+// configuration in Android Studio, or from the repo root:
+//   ./gradlew :MeepMeepTesting:run
+//
+// The routes themselves are NOT in this module: they live in SharedRoutes and are
+// the exact same files the robot runs.  Only MeepMeepRoute (what each function
+// does in MeepMeep) and MeepMeepTesting (which route to show) live here.
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -24,6 +28,7 @@ repositories {
 }
 
 dependencies {
+    implementation project(':SharedRoutes')
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'com.acmerobotics.roadrunner:core:0.5.4'
     implementation 'com.github.rh-robotics:MeepMeep:v1.1.1'

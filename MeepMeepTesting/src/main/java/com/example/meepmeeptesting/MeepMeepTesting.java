@@ -11,8 +11,11 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.awt.Toolkit;
 
-import static com.example.meepmeeptesting.Field.Park_Pos.*;
-import static com.example.meepmeeptesting.Field.Start_Pos.*;
+import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
+import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
+
+import org.firstinspires.ftc.teamcode.field.Field;
+import org.firstinspires.ftc.teamcode.field.RouteConstants;
 
 import org.rowlandhall.meepmeep.MeepMeep;
 import org.rowlandhall.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
@@ -49,20 +52,22 @@ public class MeepMeepTesting
          // Declare a MeepMeep instance
          // With a field size of 800 pixels
 
-         RobotConstants.init(RobotConstants.Chassis.B7252);
+         // The route comes from SharedRoutes: the same Decode_Route and route files the robot
+         // runs.  Pick the start / park / motif here like you would in the auton menu.
+         // MeepMeepRoute.MOTIF_FOUND (and friends) answer the route's ifBlock/whileBlock checks.
+         MeepMeepRoute route = new MeepMeepRoute(START_GOAL_ROUTE_RED, INSIDEPRIMARYPARK1RED,
+                 Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP, Field.Num_shots.THREE);
 
-
-         RobotConstants.MAX_LOOPS = 1;
-         DECODE_Route ffr = new DECODE_Route( START_GOAL_RED5,INSIDEPRIMARYPARK1RED, Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP,Field.Num_shots.THREE) ;
-
-         TrajectorySequence seq = ffr.fullSeq;
+         TrajectorySequence seq = route.toMeepMeep();
 
          MeepMeep meepMeep = new MeepMeep(600);
 
          DefaultBotBuilder myBot = new DefaultBotBuilder(meepMeep)
                  .setColorScheme(new ColorSchemeRedDark())
-                 .setDimensions(RobotConstants.BOT_WID, RobotConstants.BOT_LEN)
-                 .setConstraints(50, 50,Math.toRadians(180), Math.toRadians(180),12);
+                 .setDimensions(RouteConstants.BOT_WID, RouteConstants.BOT_LEN)
+                 .setConstraints(RouteConstants.MAX_VEL, RouteConstants.MAX_ACCEL,
+                         RouteConstants.MAX_ANG_VEL, RouteConstants.MAX_ANG_ACCEL,
+                         RouteConstants.DT_TRACK_WIDTH);
 
          RoadRunnerBotEntity rrBotEntity = myBot.followTrajectorySequence(seq);
 //         rrBotEntity.followTrajectorySequence(seq);

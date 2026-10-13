@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.field.PositionOption;
+import org.firstinspires.ftc.teamcode.field.RouteConstants;
 import org.firstinspires.ftc.teamcode.util.AxesSigns;
 
 import java.util.Arrays;
@@ -641,6 +642,12 @@ public class RobotConstants
 
     slwAccelConstraint
         = new ProfileAccelerationConstraint(SLW_ACCEL);
+
+    // The shared route code (SharedRoutes) can't see this class, so hand it what it needs.
+    RouteConstants.set(bot.name(),
+        MAX_VEL, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL,
+        SLW_VEL, SLW_ACCEL, SLW_ANG_VEL, SLW_ANG_ACCEL,
+        DT_TRACK_WIDTH, BOT_LEN, BOT_WID);
 
     params.put("SP_POWER", SP_POWER);
     params.put("SP_TIMEOUT", SP_TIMEOUT);

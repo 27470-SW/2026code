@@ -15,9 +15,10 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDir
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
-import org.firstinspires.ftc.teamcode.field.Decode_Route;
 import org.firstinspires.ftc.teamcode.field.Field;
+import org.firstinspires.ftc.teamcode.field.RobotRoute;
 import org.firstinspires.ftc.teamcode.field.Route;
+import org.firstinspires.ftc.teamcode.field.RouteConstants;
 import org.firstinspires.ftc.teamcode.image.Detector;
 import org.firstinspires.ftc.teamcode.image.ITD_Detector;
 import org.firstinspires.ftc.teamcode.robot.MecanumBot;
@@ -88,6 +89,7 @@ public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuBut
         delay    = PreferenceMgr.getDelay();
         xOffset  = PreferenceMgr.getXOffset();
         autonDebug  = Field.AutonDebug.values()[PreferenceMgr.getEnableAutonDebug()];
+        RouteConstants.autonDebug = autonDebug;   // the shared Route reads it from here
 
         lastLocation = Field.Wiffle_Pos.values()[PreferenceMgr.getLastLoc()];
         motif = PreferenceMgr.getMotif();
@@ -440,9 +442,9 @@ public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuBut
         motif = Field.Motif.SHOOTPPG;       //TODO: remove this when the Preference Mgr is setup for motif
         numShot = Field.Num_shots.THREE;    //TODO: remove this when the Preference Mgr is setup for motif
 
-        routePPG = new Decode_Route(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPPG, numShot);
-        routePGP = new Decode_Route(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPGP, numShot);
-        routeGPP = new Decode_Route(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTGPP, numShot);
+        routePPG = new RobotRoute(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPPG, numShot);
+        routePGP = new RobotRoute(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPGP, numShot);
+        routeGPP = new RobotRoute(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTGPP, numShot);
 
         resetBotLocation(routePPG.start);
         initHdg = routePPG.start.getHeading();
@@ -922,7 +924,10 @@ boolean    printOnce = true;
             return;
         }
 
-        autonRoute.opMode = this;   // lets conditions such as route::motifFound use the camera
+        if (autonRoute instanceof RobotRoute)
+        {
+            ((RobotRoute) autonRoute).opMode = this;   // lets conditions such as route::motifFound use the camera
+        }
         Pose2d startPose = autonRoute.getStart();
         resetBotLocation(null != startPose ? startPose : autonRoute.trajList.get(0).start());
 
@@ -1178,10 +1183,10 @@ boolean    printOnce = true;
 
     private final ExecutorService es = Executors.newSingleThreadExecutor();
 
-    private Decode_Route route;
-    private Decode_Route routePPG;
-    private Decode_Route routePGP;
-    private Decode_Route routeGPP;
+    private RobotRoute route;
+    private RobotRoute routePPG;
+    private RobotRoute routePGP;
+    private RobotRoute routeGPP;
 
 
 

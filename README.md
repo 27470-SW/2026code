@@ -5,18 +5,39 @@ This repo is the official [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcR
 
 | Folder | What it is |
 | --- | --- |
-| `TeamCode/` | Our robot code (OpModes, Road Runner 0.5 routes, vision, etc.) |
+| `TeamCode/` | Our robot code (OpModes, hardware, vision, etc.) |
+| `SharedRoutes/` | Auton routes, shared by TeamCode and MeepMeepTesting (plain Java) |
 | `MeepMeepTesting/` | Desktop Road Runner path visualizer with the BIOBUZZ field image |
 | `FtcRobotController/` | FTC SDK — avoid editing |
 | `GRIP/`, `GettingStarted/` | Vision pipeline experiments and season setup notes |
 
-## Running MeepMeep (any PC with Java 17+)
+## Auton routes: one copy for the robot and MeepMeep
 
-MeepMeep is plain Java, so it does not need Android Studio or the Android SDK:
+The routes live in `SharedRoutes/`, and both TeamCode and MeepMeepTesting use those same files.
+Get a route working in MeepMeep, and the robot already has it: nothing to copy over.
+
+| File | Where | What goes in it |
+| --- | --- | --- |
+| `Route.java` | SharedRoutes | The route builder (`addLocation`, `addFunction`, `ifBlock`, ...). Doesn't change between seasons. |
+| `Decode_Poses.java` | SharedRoutes | Every pose and tangent (`route.startSmallTri`, ...) |
+| `Decode_Route.java` | SharedRoutes | Picks the route from the start position; lists the functions routes can call |
+| `MAINFARROUTERED.java`, ... | SharedRoutes | The routes themselves |
+| `RobotRoute.java` | TeamCode | What each function does on the robot (shooter, intake, ...) |
+| `MeepMeepRoute.java` | MeepMeepTesting | What each function does in MeepMeep (prints its name), and the answers to `ifBlock` checks |
+
+To add a function routes can call (`route.addFunction(route::myFunction)`): add
+`protected abstract void myFunction();` to `Decode_Route`, then write it in `RobotRoute` (robot) and
+`MeepMeepRoute` (usually just `say("myFunction")`). The build fails until all three are done.
+
+SharedRoutes can't use Android or FTC SDK classes (`RobotLog`, `hardwareMap`, `MecanumBot`, ...).
+Use `RouteLog.dd(...)` for logging there.
+
+## Running MeepMeep
+
+Pick the route to show (start / park / motif) at the top of `MeepMeepTesting.java`. From the repo root:
 
 ```
-cd MeepMeepTesting
-../gradlew run          # Windows: ..\gradlew.bat run
+./gradlew :MeepMeepTesting:run          # Windows: gradlew.bat :MeepMeepTesting:run
 ```
 
 In Android Studio, pick **MeepMeepTestiing** from the run configuration dropdown (next to the green Run arrow)

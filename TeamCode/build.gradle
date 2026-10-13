@@ -26,6 +26,8 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
+    // Route builder, poses and route files (shared with MeepMeepTesting)
+    implementation project(':SharedRoutes')
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
 
     // Team 27470 libraries (carried over from 2025code)
