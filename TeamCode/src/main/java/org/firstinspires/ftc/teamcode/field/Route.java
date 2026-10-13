@@ -1835,6 +1835,7 @@ public void moveToPosition4(){
     public void makeNewTraj()
     {
         if (null == lastPose) return;   // nothing to split before the START location
+        if (null != split) return;      // each copy becomes its own piece when they rejoin
         closePiece();
         openPiece(lastPose);
     }
@@ -1853,9 +1854,11 @@ public void moveToPosition4(){
      *
      * A route without any conditionals is just RUN piece 0, RUN piece 1, ... exactly like before.
      *
-     * Rule (checked here, at init): a piece can only start where the robot actually is.  So
-     *   - a whileBlock body must end where the loop started, and
-     *   - code after endIf requires every way through the if to end at the same spot.
+     * A piece can only start where the robot actually is.  So:
+     *   - a whileBlock body must end where the loop started (checked at init), and
+     *   - if the parts of an ifBlock end in different places, the route "splits": Route keeps one
+     *     copy per end spot.  Functions and WAITs after endIf go into every copy, and so does the
+     *     next addLocation; after that every copy is at the same spot and they rejoin.
      * ========================================================================================== */
 
     /** A yes/no question the route can ask during the match, e.g. route::motifFound */
@@ -1899,9 +1902,7 @@ public void moveToPosition4(){
         final Pose2d startPose;
         final int topStep;                       // whileBlock: the condition step to loop back to
         int pendingCheck = -1;                   // CHECK step whose false target is not known yet
-        final List<Integer> jumpsToEnd = new ArrayList<>();
-        final List<Pose2d> branchEnds = new ArrayList<>();   // null = branch has no single end spot
-        final List<String> branchNames = new ArrayList<>();
+        final List<Arrival> arrivals = new ArrayList<>();    // every way out of this ifBlock
         boolean hasElse = false;
         String currentBranch;
 
@@ -1916,8 +1917,25 @@ public void moveToPosition4(){
 
     private final Deque<Block> blocks = new ArrayDeque<>();
 
-    /* Set after an endIf whose branches end in different places: nothing may follow it. */
-    private String deadEndReason = null;
+    /* One way of arriving somewhere: where the robot is, and which steps lead here (their
+     * "target" gets filled in once we know where "here" is in the program).  While the route is
+     * split, each copy is an Arrival with its own builder. */
+    private static class Arrival
+    {
+        Pose2d pose;
+        TrajectorySequenceBuilder builder;                  // split copies only
+        final List<Integer> entrySteps = new ArrayList<>(); // steps whose target must lead here
+        boolean fallsThrough = false;                       // also reached by just going to the next step
+
+        Arrival(Pose2d pose)
+        {
+            this.pose = pose;
+        }
+    }
+
+    /* Not null after an endIf whose parts end in different places: one copy per end spot,
+     * until the next addLocation brings them all to the same spot. */
+    private List<Arrival> split = null;
 
     /** Hold still (robot is stopped here) until the condition is true or timeoutSec passes. */
     public void waitUntil(Condition condition, double timeoutSec)
@@ -1981,39 +1999,44 @@ public void moveToPosition4(){
         endBranch(b, false);
         blocks.pop();
 
-        int end = program.size();
-        if (b.pendingCheck >= 0) program.get(b.pendingCheck).target = end;
-        for (int j : b.jumpsToEnd) program.get(j).target = end;
-
         if (!b.hasElse)
         {
-            // Without an elseBlock, "condition false" means: skip the block, stay where we were.
-            b.branchEnds.add(b.startPose);
-            b.branchNames.add("skipping the ifBlock (there is no elseBlock)");
+            // Without an elseBlock, "condition false" skips the block: the robot stays where it was.
+            Arrival skip = new Arrival(b.startPose);
+            skip.entrySteps.add(b.pendingCheck);
+            b.arrivals.add(skip);
         }
 
-        // Code after endIf needs every way through the if to end at the same spot.
-        String why = null;
-        Pose2d common = b.branchEnds.get(0);
-        for (int i = 0; i < b.branchEnds.size() && why == null; i++)
+        // Group the ways out of this ifBlock by where the robot ends up.
+        List<Arrival> spots = new ArrayList<>();
+        for (Arrival a : b.arrivals)
         {
-            Pose2d p = b.branchEnds.get(i);
-            if (p == null)
-                why = "the " + b.branchNames.get(i) + " part has its own ifBlock whose branches end in different places";
-            else if (!posesMatch(p, common))
-                why = "the " + b.branchNames.get(0) + " part ends at " + fmt(common)
-                        + " but the " + b.branchNames.get(i) + " part ends at " + fmt(p);
+            Arrival same = null;
+            for (Arrival spot : spots)
+            {
+                if (posesMatch(spot.pose, a.pose)) same = spot;
+            }
+            if (null == same)
+            {
+                same = new Arrival(a.pose);
+                spots.add(same);
+            }
+            same.entrySteps.addAll(a.entrySteps);
+            same.fallsThrough |= a.fallsThrough;
         }
 
-        if (why == null)
+        if (spots.size() == 1)
         {
-            openPiece(common);
+            // Every way ends at the same spot: continue together from here.
+            int next = program.size();
+            for (int step : spots.get(0).entrySteps) program.get(step).target = next;
+            openPiece(spots.get(0).pose);
         }
         else
         {
-            deadEndReason = "Nothing can come after this endIf: " + why
-                    + ". Either make every way through the ifBlock end at the same location,"
-                    + " or put the rest of the route inside each part.";
+            // Different spots: keep one copy of the route per spot until the next addLocation.
+            for (Arrival spot : spots) spot.builder = newBuilder(spot.pose);
+            split = spots;
             traj = null;
         }
     }
@@ -2032,10 +2055,8 @@ public void moveToPosition4(){
     {
         Block b = currentBlock(BlockType.WHILE, "endWhile");
         checkNoPending("endWhile");
+        checkNotSplit("endWhile");
         closePiece();
-        if (deadEndReason != null)
-            throw new IllegalStateException(
-                    "Everything inside a whileBlock must come back to where the loop started. " + deadEndReason);
         if (!posesMatch(lastPose, b.startPose))
             throw new IllegalStateException("The whileBlock starts at " + fmt(b.startPose)
                     + " but its last location is " + fmt(lastPose)
@@ -2096,15 +2117,105 @@ public void moveToPosition4(){
     private void openPiece(Pose2d from)
     {
         lastPose = from;
-        traj = new TrajectorySequenceBuilder(
+        traj = newBuilder(from);
+    }
+
+    private TrajectorySequenceBuilder newBuilder(Pose2d from)
+    {
+        return new TrajectorySequenceBuilder(
                 from,
                 defVelLim, defAccelLim,
                 RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
     }
 
-    private void checkReachable()
+    private void checkNotSplit(String what)
     {
-        if (null != deadEndReason) throw new IllegalStateException(deadEndReason);
+        if (null != split)
+            throw new IllegalStateException("The ifBlock just before " + what
+                    + " ends in different places, so the robot could be in more than one spot here."
+                    + " Add an addLocation (where every path should go next) before " + what + ".");
+    }
+
+    /** Run a builder change once, or once per copy while the route is split. */
+    private void inEachCopy(Runnable change)
+    {
+        if (null == split)
+        {
+            change.run();
+            return;
+        }
+        for (Arrival copy : split)
+        {
+            traj = copy.builder;
+            lastPose = copy.pose;
+            change.run();
+            copy.builder = traj;
+        }
+        traj = null;
+    }
+
+    /* Turn each split copy into steps: its own piece (if it has anything in it), then a JUMP whose
+     * target is filled in later.  The last copy may instead just continue to the next step.
+     * The copy that is reached by falling through must come first, because falling through
+     * lands on whatever step comes next.  Returns the ways out (where each copy ends). */
+    private List<Arrival> flush(List<Arrival> copies, boolean lastMayFallThrough)
+    {
+        List<Arrival> order = new ArrayList<>();
+        for (Arrival copy : copies)
+        {
+            if (copy.fallsThrough) order.add(0, copy);
+            else order.add(copy);
+        }
+
+        List<Arrival> exits = new ArrayList<>();
+        for (int i = 0; i < order.size(); i++)
+        {
+            Arrival copy = order.get(i);
+            int first = program.size();
+            for (int step : copy.entrySteps) program.get(step).target = first;
+            traj = copy.builder;
+            closePiece();
+
+            Arrival exit = new Arrival(copy.pose);
+            if (lastMayFallThrough && i == order.size() - 1)
+                exit.fallsThrough = true;
+            else
+                exit.entrySteps.add(addStep(new Step(StepType.JUMP, -1, null, 0, "rejoin")));
+            exits.add(exit);
+        }
+        return exits;
+    }
+
+    /* addLocation while split: add the move to every copy, then all copies are at loc. */
+    private void rejoinAt(Pose2d loc, Movement move, Heading head, boolean custom, double customHeadValue)
+    {
+        if (move == Movement.START)
+            throw new IllegalStateException("START can't come right after an endIf.");
+
+        List<Arrival> copies = split;
+        split = null;   // so addLocation below works on one copy at a time
+        Double slow = pendingSlow;
+        Double tangent = pendingTangent;
+        for (Arrival copy : copies)
+        {
+            traj = copy.builder;
+            lastPose = copy.pose;
+            pendingSlow = slow;
+            pendingTangent = tangent;
+            newTraj = false;   // never split a copy in the middle
+            addLocation(loc, move, head, custom, customHeadValue);
+            copy.builder = traj;
+            copy.pose = loc;
+        }
+        newTraj = false;
+
+        List<Arrival> exits = flush(copies, true);
+        int next = program.size();
+        for (Arrival exit : exits)
+        {
+            for (int step : exit.entrySteps) program.get(step).target = next;
+        }
+        openPiece(loc);
     }
 
     private void checkNoPending(String what)
@@ -2116,7 +2227,7 @@ public void moveToPosition4(){
 
     private void startBlockBoundary(String what)
     {
-        checkReachable();
+        checkNotSplit(what);
         if (null == lastPose)
             throw new IllegalStateException(what + " must come after the START location.");
         checkNoPending(what);
@@ -2131,18 +2242,29 @@ public void moveToPosition4(){
         return blocks.peek();
     }
 
-    /** Close the current branch of an ifBlock and remember where it ends. */
+    /** Close the current part of an ifBlock and remember how it gets out (and where it ends). */
     private void endBranch(Block b, boolean jumpToEnd)
     {
-        checkNoPending(b.currentBranch + " end");
-        closePiece();
-        b.branchEnds.add(null == deadEndReason ? lastPose : null);
-        b.branchNames.add(b.currentBranch);
-        deadEndReason = null;   // the next branch is reachable again
-        if (jumpToEnd)
+        checkNoPending("the end of " + b.currentBranch);
+        if (null != split)
         {
-            b.jumpsToEnd.add(addStep(new Step(StepType.JUMP, -1, null, 0, "end of " + b.currentBranch)));
+            // This part ended with its own ifBlock that ended in different places:
+            // each copy becomes a way out of this part.
+            List<Arrival> copies = split;
+            split = null;
+            b.arrivals.addAll(flush(copies, !jumpToEnd));
         }
+        else
+        {
+            closePiece();
+            Arrival a = new Arrival(lastPose);
+            if (jumpToEnd)
+                a.entrySteps.add(addStep(new Step(StepType.JUMP, -1, null, 0, "end of " + b.currentBranch)));
+            else
+                a.fallsThrough = true;
+            b.arrivals.add(a);
+        }
+        traj = null;
     }
 
     private static boolean posesMatch(Pose2d a, Pose2d b)
@@ -2210,7 +2332,11 @@ public void moveToPosition4(){
 
     public void addLocation(Pose2d loc, Movement move, Heading head, boolean custom, double customHeadValue)
     {
-        checkReachable();
+        if (null != split)
+        {
+            rejoinAt(loc, move, head, custom, customHeadValue);
+            return;
+        }
         RobotLog.dd(TAG, "adding Location: x:%f, y:%f, h:%f, move:%s,head:%s", loc.getX(), loc.getY(), Math.toDegrees(loc.getHeading()), move, head);
         if(null != lastPose)
   	    {
@@ -2347,7 +2473,7 @@ public void moveToPosition4(){
 
      public void addMovement(Movement move, Double amount)
      {
-          checkReachable();
+          checkNotSplit("FORWARD/BACK/STRAFE/TURN (use an addLocation instead)");
           switch (move)
   	      {
                case STRAFE_RIGHT:
@@ -2507,16 +2633,18 @@ public void moveToPosition4(){
 
      public void addFunction(MarkerCallback callback)
      {
-          checkReachable();
-          anchorFunctions();
-          traj.addTemporalMarker(callback);
+          inEachCopy(() -> {
+               anchorFunctions();
+               traj.addTemporalMarker(callback);
+          });
      }
 
      public void addFunction(MarkerCallback callback, double time)
      {
-          checkReachable();
-          anchorFunctions();
-          traj.addTemporalMarker(time, callback);
+          inEachCopy(() -> {
+               anchorFunctions();
+               traj.addTemporalMarker(time, callback);
+          });
      }
 
      /* A function needs something in its piece to attach to.  If the piece is still empty
@@ -2532,11 +2660,10 @@ public void moveToPosition4(){
 
      public void addEvent(Action act, double value)
      {
-          checkReachable();
           switch(act)
   	      {
               case WAIT:
-                  traj.waitSeconds(value);
+                  inEachCopy(() -> traj.waitSeconds(value));
                   break;
               case TANGENT:
           /*        try{          //cath error when trying to add tangent to first trajectory. TODO: make this not needed
@@ -2624,7 +2751,19 @@ public void moveToPosition4(){
             throw new IllegalStateException("The route ends inside a "
                     + (blocks.peek().type == BlockType.IF ? "ifBlock: add endIf()" : "whileBlock: add endWhile()") + ".");
         }
-        closePiece();   // the last piece (skipped if empty, e.g. after an endIf with no common end)
+        if (null != split)
+        {
+            // The route ends while split (e.g. each part parks somewhere different): finish each copy.
+            List<Arrival> copies = split;
+            split = null;
+            List<Arrival> exits = flush(copies, true);
+            int end = program.size();
+            for (Arrival exit : exits)
+            {
+                for (int step : exit.entrySteps) program.get(step).target = end;
+            }
+        }
+        closePiece();   // the last piece (skipped if empty)
         /* Finalize Traj Seq */
         if(null != trajList)
 	    {
