@@ -9,7 +9,8 @@ package com.example.meepmeeptesting;
 import java.awt.Image;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.awt.Toolkit;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
 import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
@@ -92,7 +93,18 @@ public class MeepMeepTesting
          {
              throw new IllegalStateException("Field image not found on classpath: " + FIELD_IMAGE);
          }
-         Image background = Toolkit.getDefaultToolkit().getImage(imageUrl);
+         // ImageIO.read loads the whole image before MeepMeep uses it.  (Toolkit.getImage loads it
+         // in the background, and MeepMeep resizing it mid-load is what made the field image
+         // sometimes fail with a ClassCastException.)
+         Image background;
+         try
+         {
+             background = ImageIO.read(imageUrl);
+         }
+         catch (IOException e)
+         {
+             throw new IllegalStateException("Could not read field image " + FIELD_IMAGE, e);
+         }
          meepMeep.setBackground(background)
                  .setDarkMode(true)
                  .setBackgroundAlpha(0.95f)
