@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Movement.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Heading.*;
 
+import com.qualcomm.robotcore.util.RobotLog;
 
 
 public class MoveToParkPOSDECODE {
@@ -19,7 +20,7 @@ public class MoveToParkPOSDECODE {
     }
 
     public void makeTraj(Field.Park_Pos parkPos, Field.Alliance alliance) {
-        RouteLog.dd(TAG, "choosing park in movetoparkposdecode");
+        RobotLog.dd(TAG, "choosing park in movetoparkposdecode");
 
         if (parkPos == INSIDEPRIMARYPARK1RED) {
             route.addLocation(route.parkInside1Red, LINE, HEAD_LINEAR);
@@ -52,7 +53,7 @@ public class MoveToParkPOSDECODE {
                 route.addLocation(route.tempParkBlue, LINE, HEAD_CONSTANT);
         }
 
-        RouteLog.dd(TAG, "In movetoparkposdecode Park choice %s",parkPos);
+        RobotLog.dd(TAG, "In movetoparkposdecode Park choice %s",parkPos);
 
 
 

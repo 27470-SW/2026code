@@ -17,5 +17,8 @@ include ':TeamCode'
 // every route file.  Edit routes here once; both the robot and MeepMeep use them.
 include ':SharedRoutes'
 
+// MeepMeep's stand-ins for FTC SDK classes the shared code uses (RobotLog)
+include ':FtcStandIns'
+
 // Desktop Road Runner path visualizer (plain Java, runs on any PC with a JDK)
 include ':MeepMeepTesting'

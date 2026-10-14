@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.field;
 
+import com.qualcomm.robotcore.util.RobotLog;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint;
@@ -39,11 +41,10 @@ import static org.firstinspires.ftc.teamcode.field.RouteConstants.*;
  *
  * The pieces of a season's auton are layered on top of it:
  *
- *   Route            (SharedRoutes)    addLocation, addFunction, addEvent, ifBlock, whileBlock...
- *     Decode_Poses   (SharedRoutes)    every Pose2d / tangent the routes drive to
- *       Decode_Route (SharedRoutes)    picks the route; lists the functions routes may call
- *         RobotRoute     (TeamCode)        what each function does on the robot
- *         MeepMeepRoute  (MeepMeepTesting) what each function does in MeepMeep (prints it)
+ *   Route          (SharedRoutes)    addLocation, addFunction, addEvent, ifBlock, whileBlock...
+ *     Decode_Route (SharedRoutes)    poses, reusable pieces, the functions routes may call, picks the route
+ *       RobotRoute     (TeamCode)        what each function does on the robot
+ *       MeepMeepRoute  (MeepMeepTesting) what each function does in MeepMeep (prints it)
  *
  * The route files (MAINFARROUTERED, ...) are in SharedRoutes and are used by both.
  * ============================================================================================== */
@@ -715,13 +716,13 @@ public abstract class Route
             {
                 case RUN:
                     TrajectorySequence seq = trajList.get(s.piece);
-                    RouteLog.dd(TAG, "step %d: %s  %s -> %s", i, s.label, fmt(seq.start()), fmt(seq.end()));
+                    RobotLog.dd(TAG, "step %d: %s  %s -> %s", i, s.label, fmt(seq.start()), fmt(seq.end()));
                     break;
                 case CHECK:
-                    RouteLog.dd(TAG, "step %d: %s: if false go to step %d", i, s.label, s.target);
+                    RobotLog.dd(TAG, "step %d: %s: if false go to step %d", i, s.label, s.target);
                     break;
                 case JUMP:
-                    RouteLog.dd(TAG, "step %d: %s: go to step %d", i, s.label, s.target);
+                    RobotLog.dd(TAG, "step %d: %s: go to step %d", i, s.label, s.target);
                     break;
             }
         }
@@ -750,7 +751,7 @@ public abstract class Route
         {
             if (++count > DRY_RUN_MAX_STEPS)
             {
-                RouteLog.ee(TAG, "dry run stopped after %d steps (does a whileBlock never end?)", DRY_RUN_MAX_STEPS);
+                RobotLog.ee(TAG, "dry run stopped after %d steps (does a whileBlock never end?)", DRY_RUN_MAX_STEPS);
                 return;
             }
             Step s = program.get(step);
@@ -769,10 +770,10 @@ public abstract class Route
                     }
                     catch (Exception e)
                     {
-                        RouteLog.ee(TAG, "Condition failed (%s); treating it as false", e.toString());
+                        RobotLog.ee(TAG, "Condition failed (%s); treating it as false", e.toString());
                         result = false;
                     }
-                    RouteLog.dd(TAG, "step %d %s: %s", step, s.label,
+                    RobotLog.dd(TAG, "step %d %s: %s", step, s.label,
                             result ? "true" : (s.timeoutSec > 0 ? "timed out" : "false"));
                     if (!result && s.timeoutSec > 0) out.holdStill(s.timeoutSec);
                     step = result ? step + 1 : s.target;
@@ -792,11 +793,11 @@ public abstract class Route
         parkMap.put(parkEnum, traj.build());
         try
   	    {
-            RouteLog.dd(TAG, "putting park position, %s", parkEnum);
+            RobotLog.dd(TAG, "putting park position, %s", parkEnum);
         }
   	    catch (Exception e)
   	    {
-              RouteLog.dd(TAG, "failure putting park position in log");
+              RobotLog.dd(TAG, "failure putting park position in log");
         }
         traj = null;
         lastPose = origLastPose;
@@ -820,7 +821,7 @@ public abstract class Route
             rejoinAt(loc, move, head, custom, customHeadValue);
             return;
         }
-        RouteLog.dd(TAG, "adding Location: x:%f, y:%f, h:%f, move:%s,head:%s", loc.getX(), loc.getY(), Math.toDegrees(loc.getHeading()), move, head);
+        RobotLog.dd(TAG, "adding Location: x:%f, y:%f, h:%f, move:%s,head:%s", loc.getX(), loc.getY(), Math.toDegrees(loc.getHeading()), move, head);
         if(null != lastPose)
   	    {
               if(!samePose(loc)) {
@@ -1020,14 +1021,14 @@ public abstract class Route
                   newTraj = false;
                   traj.setTangent(value);
            */
-                  RouteLog.dd(TAG, "Setting tangent as %f", value);
+                  RobotLog.dd(TAG, "Setting tangent as %f", value);
                   pendingTangent = value;
                   break;
               case SLOW:
         /*          try{  //Need to make a new traj in order to make this one slow
                       makeNewTraj();
                   }catch (Exception e){}    //error if that traj didn't have anything in it yet
-                  RouteLog.dd(TAG, "Setting traj as SLOW");
+                  RobotLog.dd(TAG, "Setting traj as SLOW");
                   if(value <= 0) {
                       traj = new TrajectorySequenceBuilder(
                               lastPose,
@@ -1078,10 +1079,10 @@ public abstract class Route
     public void printLastPose(){
         try{
             TrajectorySequence temp = trajList.get(trajList.size()-1);
-            if(VERBOSE) {  RouteLog.dd(TAG, "Trajectory Sequence from %s to %s, dur=%f",
+            if(VERBOSE) {  RobotLog.dd(TAG, "Trajectory Sequence from %s to %s, dur=%f",
                     temp.start(), temp.end(), temp.duration());}
         }catch(Exception e){
-            if(VERBOSE) { RouteLog.dd(TAG, "Unable to printLastPose");}
+            if(VERBOSE) { RobotLog.dd(TAG, "Unable to printLastPose");}
         }
     }
 
@@ -1091,7 +1092,7 @@ public abstract class Route
 
     public void finalizeTrajSeq()
     {
-        RouteLog.dd(TAG, "finalizing a TrajSeq");
+        RobotLog.dd(TAG, "finalizing a TrajSeq");
         if (!blocks.isEmpty())
         {
             throw new IllegalStateException("The route ends inside a "
@@ -1113,7 +1114,7 @@ public abstract class Route
         /* Finalize Traj Seq */
         if(null != trajList)
 	    {
-            RouteLog.dd(TAG,"trajList does not = null");
+            RobotLog.dd(TAG,"trajList does not = null");
              if(null != fullSeq)
 	         {
                  addTrajectory(fullSeq);
@@ -1125,7 +1126,7 @@ public abstract class Route
                      MAX_ANG_VEL, MAX_ANG_ACCEL);
 
              double cumTime = 0.0;
-            if(VERBOSE) { RouteLog.dd(TAG, "Done Building trajectories");}
+            if(VERBOSE) { RobotLog.dd(TAG, "Done Building trajectories");}
              int seqNum = 0;
              TrajectorySequence parkTraj = parkMap.get(parkChoice);
              if(null != parkTraj) {
@@ -1136,25 +1137,25 @@ public abstract class Route
   	         {
                     String seqName = String.valueOf(seqNum++);
                     //TrajectorySequence tSeq = e.getValue();
-                 if(VERBOSE) { RouteLog.dd(TAG, "Trajectory Sequence %s len=%d dur=%.2f",
+                 if(VERBOSE) { RobotLog.dd(TAG, "Trajectory Sequence %s len=%d dur=%.2f",
                          seqName, tSeq.size(), tSeq.duration());}
 
                    for (int i = 0; i < tSeq.size(); i++)
   	          	   {
                          SequenceSegment seg = tSeq.get(i);
-                       if(VERBOSE) {  RouteLog.dd(TAG, "Seg %d %s to %s in %.2f",
+                       if(VERBOSE) {  RobotLog.dd(TAG, "Seg %d %s to %s in %.2f",
                            i, seg.getStartPose(), seg.getEndPose(), seg.getDuration());}
 
                          if (seg instanceof TrajectorySegment)
                          {
                                Trajectory t = ((TrajectorySegment) seg).getTrajectory();
                                full.addTrajectory(t);
-                             if(VERBOSE) { RouteLog.dd(TAG, "TrajSeg %d %s to %s in %.2f",
+                             if(VERBOSE) { RobotLog.dd(TAG, "TrajSeg %d %s to %s in %.2f",
                                  i, seg.getStartPose(), seg.getEndPose(), seg.getDuration());}
 
                                for (TrajectoryMarker m : ((TrajectorySegment) seg).getTrajectory().getMarkers())
                                {
-                                   if(VERBOSE) { RouteLog.dd(TAG, "  marker: time=%.2f", m.getTime());}
+                                   if(VERBOSE) { RobotLog.dd(TAG, "  marker: time=%.2f", m.getTime());}
                                }
                                cumTime += t.duration();
                          }
@@ -1164,7 +1165,7 @@ public abstract class Route
   	          		         {
                                    TurnSegment ts = (TurnSegment) seg;
                                    full.turn(ts.getTotalRotation());
-                                 if(VERBOSE) { RouteLog.dd(TAG, "TurnSeg %d %s to %s in %.2f",
+                                 if(VERBOSE) { RobotLog.dd(TAG, "TurnSeg %d %s to %s in %.2f",
                                      i, seg.getStartPose(), seg.getEndPose(), seg.getDuration());}
 
                                    for (TrajectoryMarker m : seg.getMarkers())
@@ -1177,13 +1178,13 @@ public abstract class Route
   	          		         {
                                    WaitSegment ws = (WaitSegment) seg;
                                    full.waitSeconds(ws.getDuration());
-                                 if(VERBOSE) {  RouteLog.dd(TAG, "WaitSeg %d %s to %s in %.2f",
+                                 if(VERBOSE) {  RobotLog.dd(TAG, "WaitSeg %d %s to %s in %.2f",
                                      i, seg.getStartPose(), seg.getEndPose(), seg.getDuration());}
 
                                    for (TrajectoryMarker m : seg.getMarkers())
   	          		               {
                                        full.addTemporalMarker(m.getTime(), m.getCallback());
-                                       if(VERBOSE) { RouteLog.dd(TAG, "  marker: time=%.2f", m.getTime());}
+                                       if(VERBOSE) { RobotLog.dd(TAG, "  marker: time=%.2f", m.getTime());}
                                    }
                                    cumTime += ws.getDuration();
                               }

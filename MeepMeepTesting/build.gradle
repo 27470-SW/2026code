@@ -29,6 +29,7 @@ repositories {
 
 dependencies {
     implementation project(':SharedRoutes')
+    implementation project(':FtcStandIns')   // RobotLog prints to the console
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'com.acmerobotics.roadrunner:core:0.5.4'
     implementation 'com.github.rh-robotics:MeepMeep:v1.1.1'

@@ -19,8 +19,7 @@ Get a route working in MeepMeep, and the robot already has it: nothing to copy o
 | File | Where | What goes in it |
 | --- | --- | --- |
 | `Route.java` | SharedRoutes | The route builder (`addLocation`, `addFunction`, `ifBlock`, ...). Doesn't change between seasons. |
-| `Decode_Poses.java` | SharedRoutes | Every pose and tangent (`route.startSmallTri`, ...) |
-| `Decode_Route.java` | SharedRoutes | Picks the route from the start position; lists the functions routes can call |
+| `Decode_Route.java` | SharedRoutes | Every pose and tangent, reusable pieces like `shootMotif`, the list of functions routes can call, and picking the route |
 | `MAINFARROUTERED.java`, ... | SharedRoutes | The routes themselves |
 | `RobotRoute.java` | TeamCode | What each function does on the robot (shooter, intake, ...) |
 | `MeepMeepRoute.java` | MeepMeepTesting | What each function does in MeepMeep (prints its name), and the answers to `ifBlock` checks |
@@ -29,8 +28,8 @@ To add a function routes can call (`route.addFunction(route::myFunction)`): add
 `protected abstract void myFunction();` to `Decode_Route`, then write it in `RobotRoute` (robot) and
 `MeepMeepRoute` (usually just `say("myFunction")`). The build fails until all three are done.
 
-SharedRoutes can't use Android or FTC SDK classes (`RobotLog`, `hardwareMap`, `MecanumBot`, ...).
-Use `RouteLog.dd(...)` for logging there.
+SharedRoutes can't use Android or FTC SDK classes (`hardwareMap`, `MecanumBot`, ...). `RobotLog` works
+everywhere: on the robot it's the real one, and in MeepMeep (via `FtcStandIns`) it prints to the console.
 
 ## Running MeepMeep
 

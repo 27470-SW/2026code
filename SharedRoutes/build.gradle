@@ -6,9 +6,9 @@ plugins {
 //   - TeamCode        (the robot)         -> implementation project(':SharedRoutes')
 //   - MeepMeepTesting (the desktop viewer) -> implementation project(':SharedRoutes')
 //
-// Nothing in here may use Android or FTC SDK classes (RobotLog, hardwareMap, MecanumBot, ...).
-// Code that needs the robot goes in TeamCode's RobotRoute; the MeepMeep version goes in
-// MeepMeepTesting's MeepMeepRoute.
+// Nothing in here may use Android or FTC SDK classes (hardwareMap, MecanumBot, ...), except the
+// ones in FtcStandIns (RobotLog).  Code that needs the robot goes in TeamCode's version of the
+// route runner; the MeepMeep version goes in MeepMeepTesting.
 
 java {
     // TeamCode compiles at Java 8, so this module must too.
@@ -23,4 +23,7 @@ repositories {
 
 dependencies {
     api 'com.acmerobotics.roadrunner:core:0.5.4'
+
+    // RobotLog: the real one on the robot, FtcStandIns' console version in MeepMeep
+    compileOnly project(':FtcStandIns')
 }

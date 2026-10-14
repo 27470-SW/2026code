@@ -26,7 +26,7 @@ import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.*;
 /* ==============================================================================================
  * RobotRoute: what each route function does ON THE ROBOT.
  *
- * The routes themselves (Decode_Route, MAINFARROUTERED, ...) and the poses (Decode_Poses) are
+ * The routes themselves (Decode_Route, MAINFARROUTERED, ...) and the poses (in Decode_Route) are
  * in SharedRoutes, shared with MeepMeep.  This file is TeamCode only, so it can use the robot.
  * MeepMeepTesting has its own version of these functions in MeepMeepRoute.
  *
@@ -37,16 +37,6 @@ import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.*;
 public class RobotRoute extends Decode_Route
 {
     private static final String TAG = "SJH_RTE";
-
-    /* The shared route code logs through RouteLog; send it to RobotLog (logcat) like before. */
-    static
-    {
-        RouteLog.setSink(new RouteLog.Sink()
-        {
-            @Override public void debug(String tag, String msg) { RobotLog.dd(tag, "%s", msg); }
-            @Override public void error(String tag, String msg) { RobotLog.ee(tag, "%s", msg); }
-        });
-    }
 
     public RobotRoute(MecanumBot robot,
                       PositionOption startPos,
