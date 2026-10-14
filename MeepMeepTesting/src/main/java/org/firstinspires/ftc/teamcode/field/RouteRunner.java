@@ -1,10 +1,7 @@
-package com.example.meepmeeptesting;
+package org.firstinspires.ftc.teamcode.field;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
-import org.firstinspires.ftc.teamcode.field.Decode_Route;
-import org.firstinspires.ftc.teamcode.field.Field;
-import org.firstinspires.ftc.teamcode.field.PositionOption;
 import org.rowlandhall.meepmeep.roadrunner.trajectorysequence.TrajectorySequence;
 import org.rowlandhall.meepmeep.roadrunner.trajectorysequence.sequencesegment.SequenceSegment;
 import org.rowlandhall.meepmeep.roadrunner.trajectorysequence.sequencesegment.TrajectorySegment;
@@ -15,19 +12,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /* ==============================================================================================
- * MeepMeepRoute: what each route function does IN MEEPMEEP (it just prints its name).
+ * RouteRunner (MeepMeepTesting): the Decode_Route that MeepMeepTesting builds and shows.
+ * It says what each route function does IN MEEPMEEP (it just prints its name), answers the
+ * route's conditions, and turns the route into the path MeepMeep animates (toMeepMeep).
  *
- * The routes and poses are in SharedRoutes: the same files the robot runs.
- * TeamCode's version of these functions (the real robot code) is RobotRoute.
+ * The routes and poses are in SharedCode: the same files the robot runs.
+ * TeamCode has its own RouteRunner with the real robot version of these functions.
  * ============================================================================================== */
-public class MeepMeepRoute extends Decode_Route
+public class RouteRunner extends Decode_Route
 {
     /* ----------------------------------------------------------------------------------------
      * Answers for the route's conditions.  Change these to see the other path in MeepMeep.
      * ---------------------------------------------------------------------------------------- */
     public static boolean MOTIF_FOUND = true;
 
-    public MeepMeepRoute(PositionOption startPos,
+    public RouteRunner(PositionOption startPos,
                          Field.Park_Pos parkPos,
                          Field.Wiffle_Pos lastLocation,
                          Field.Motif motif,

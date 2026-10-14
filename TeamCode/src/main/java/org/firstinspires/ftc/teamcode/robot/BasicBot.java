@@ -118,6 +118,8 @@ public class BasicBot
     protected static float CAMERA_Y_IN_BOT;
     protected static float CAMERA_Z_IN_BOT;
 
+    /* Drive direction used if none was set before calibrateGyro (was RobotConstants.DT_DIR) */
+    public static DriveDir DT_DIR = DriveDir.PUSHER;
     private final DriveDir defDriveDir = DriveDir.PUSHER;
     private DriveDir ddir = defDriveDir;
     private boolean invertDrive = false;
@@ -428,7 +430,7 @@ public class BasicBot
         {
             RobotLog.dd(TAG, "setDriveDir called with R/L");
             if(calibrationDriveDir == DriveDir.UNKNOWN) calibrationDriveDir =
-                RobotConstants.DT_DIR;
+                DT_DIR;
             return;
         }
 
@@ -462,8 +464,8 @@ public class BasicBot
         if(calibrationDriveDir == DriveDir.UNKNOWN)
         {
             RobotLog.ii(TAG, "calibrateGyro called without having set a drive Direction. " +
-                "Defaulting to " + RobotConstants.DT_DIR);
-            setDriveDir(RobotConstants.DT_DIR);
+                "Defaulting to " + DT_DIR);
+            setDriveDir(DT_DIR);
         }
         RobotLog.ii(TAG, "Calibration drive dir = %s", calibrationDriveDir);
         gyroReady = true;

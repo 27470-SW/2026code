@@ -1,0 +1,30 @@
+plugins {
+    id 'java-library'
+}
+
+// SharedCode is plain Java (no Android), so it can be used by both:
+//   - TeamCode        (the robot)         -> implementation project(':SharedCode')
+//   - MeepMeepTesting (the desktop viewer) -> implementation project(':SharedCode')
+//
+// Nothing in here may use Android or FTC SDK classes (hardwareMap, MecanumBot, ...), except the
+// ones that have a stand-in in FtcStandIns (RobotLog, @Config, DcMotorSimple.Direction,
+// Servo.Direction, PIDFCoefficients, AxesOrder).  Code that needs the robot goes in TeamCode's
+// RouteRunner; the MeepMeep version goes in MeepMeepTesting's RouteRunner.
+
+java {
+    // TeamCode compiles at Java 8, so this module must too.
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.brott.dev/' } // Road Runner
+}
+
+dependencies {
+    api 'com.acmerobotics.roadrunner:core:0.5.4'
+
+    // FTC SDK classes: the real ones on the robot, FtcStandIns' versions in MeepMeep
+    compileOnly project(':FtcStandIns')
+}

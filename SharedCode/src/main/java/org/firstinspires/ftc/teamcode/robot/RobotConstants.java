@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.field.PositionOption;
-import org.firstinspires.ftc.teamcode.field.RouteConstants;
 import org.firstinspires.ftc.teamcode.util.AxesSigns;
 
 import java.util.Arrays;
@@ -322,7 +321,6 @@ public class RobotConstants
   public static Field.Alliance alliance = Field.Alliance.RED;
   public static PositionOption startPos = Field.Start_Pos.FARMAINLYNEARRED;
 
-  public static BasicBot.DriveDir  DT_DIR = BasicBot.DriveDir.PUSHER;
   public static DcMotorSimple.Direction DT_FLDIR = DcMotorSimple.Direction.REVERSE;
   public static DcMotorSimple.Direction DT_BLDIR = DcMotorSimple.Direction.REVERSE;
   public static DcMotorSimple.Direction DT_FRDIR = DcMotorSimple.Direction.FORWARD;
@@ -643,12 +641,6 @@ public class RobotConstants
     slwAccelConstraint
         = new ProfileAccelerationConstraint(SLW_ACCEL);
 
-    // The shared route code (SharedRoutes) can't see this class, so hand it what it needs.
-    RouteConstants.set(bot.name(),
-        MAX_VEL, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL,
-        SLW_VEL, SLW_ACCEL, SLW_ANG_VEL, SLW_ANG_ACCEL,
-        DT_TRACK_WIDTH, BOT_LEN, BOT_WID);
-
     params.put("SP_POWER", SP_POWER);
     params.put("SP_TIMEOUT", SP_TIMEOUT);
     params.put("DP_TIMEOUT", DP_TIMEOUT);
@@ -706,7 +698,6 @@ public class RobotConstants
     RobotLog.dd(TAG, " DT_MAX_IPS: %4.1f", DT_MAX_IPS);
     RobotLog.dd(TAG, " DT_SAF_CPS: %4.1f", DT_SAF_CPS);
     RobotLog.dd(TAG, " DT_SAF_IPS: %4.1f", DT_SAF_IPS);
-    RobotLog.dd(TAG, " DT_DIR: %s", DT_DIR.toString());
     RobotLog.dd(TAG, " DT_kA: %4.2f ", kA);
     RobotLog.dd(TAG, " DT_kV: %4.2f ", kV);
     RobotLog.dd(TAG, " DT_LAT_MULT: %4.2f ", LATERAL_MULTIPLIER);

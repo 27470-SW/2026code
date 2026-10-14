@@ -8,8 +8,8 @@ plugins {
 // configuration in Android Studio, or from the repo root:
 //   ./gradlew :MeepMeepTesting:run
 //
-// The routes themselves are NOT in this module: they live in SharedRoutes and are
-// the exact same files the robot runs.  Only MeepMeepRoute (what each function
+// The routes themselves are NOT in this module: they live in SharedCode and are
+// the exact same files the robot runs.  Only RouteRunner (what each function
 // does in MeepMeep) and MeepMeepTesting (which route to show) live here.
 
 java {
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation project(':SharedRoutes')
+    implementation project(':SharedCode')
     implementation project(':FtcStandIns')   // RobotLog prints to the console
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'com.acmerobotics.roadrunner:core:0.5.4'

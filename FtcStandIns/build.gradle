@@ -2,14 +2,16 @@ plugins {
     id 'java-library'
 }
 
-// Stand-ins for the few FTC SDK classes that the shared code (SharedRoutes) uses, so it can
-// also run in MeepMeep, which has no FTC SDK.
-//   - SharedRoutes compiles against these (compileOnly), but does not include them.
+// Stand-ins for the few FTC SDK / FTC Dashboard classes that SharedCode uses (RobotLog, @Config,
+// DcMotorSimple.Direction, Servo.Direction, PIDFCoefficients, AxesOrder), so it can also run in
+// MeepMeep, which has no FTC SDK.
+//   - SharedCode compiles against these (compileOnly), but does not include them.
 //   - On the robot, the real FTC SDK classes are used instead.
 //   - MeepMeepTesting includes these, so in MeepMeep RobotLog.dd(...) prints to the console.
 //
 // Every class and method in here must exist, with exactly the same signature, in the real
-// FTC SDK.  Otherwise the shared code compiles but crashes on the robot.
+// FTC SDK.  Otherwise the shared code compiles but crashes on the robot.  If SharedCode needs a
+// new FTC class, copy its shape from the real SDK class (Ctrl+B on it in TeamCode).
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8

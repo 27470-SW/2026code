@@ -24,21 +24,22 @@ import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
 import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.*;
 
 /* ==============================================================================================
- * RobotRoute: what each route function does ON THE ROBOT.
+ * RouteRunner (TeamCode): the Decode_Route that Decode_Auton builds and runs on the robot.
+ * It holds the robot and the opmode, and says what each route function does ON THE ROBOT.
  *
  * The routes themselves (Decode_Route, MAINFARROUTERED, ...) and the poses (in Decode_Route) are
- * in SharedRoutes, shared with MeepMeep.  This file is TeamCode only, so it can use the robot.
- * MeepMeepTesting has its own version of these functions in MeepMeepRoute.
+ * in SharedCode, shared with MeepMeep.  This file is TeamCode only, so it can use the robot.
+ * MeepMeepTesting has its own RouteRunner with the MeepMeep version of these functions.
  *
  * A function that routes call must also be listed (abstract) in Decode_Route.
  * Helpers that only these functions use (moveArmToDrop, openclaw, ...) can just live here.
  * ============================================================================================== */
 @SuppressWarnings("unused")
-public class RobotRoute extends Decode_Route
+public class RouteRunner extends Decode_Route
 {
     private static final String TAG = "SJH_RTE";
 
-    public RobotRoute(MecanumBot robot,
+    public RouteRunner(MecanumBot robot,
                       PositionOption startPos,
                       Field.Park_Pos parkPos,
                       Field.Wiffle_Pos lastLocation,

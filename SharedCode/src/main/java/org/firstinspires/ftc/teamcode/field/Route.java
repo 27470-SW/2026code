@@ -31,7 +31,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.firstinspires.ftc.teamcode.field.RouteConstants.*;
+import org.firstinspires.ftc.teamcode.robot.RobotConstants;
+
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.TrajEnum.*;
 
 /* ==============================================================================================
  * Route: the route builder.  This file should NOT need to change from season to season.
@@ -41,18 +44,28 @@ import static org.firstinspires.ftc.teamcode.field.RouteConstants.*;
  *
  * The pieces of a season's auton are layered on top of it:
  *
- *   Route          (SharedRoutes)    addLocation, addFunction, addEvent, ifBlock, whileBlock...
- *     Decode_Route (SharedRoutes)    poses, reusable pieces, the functions routes may call, picks the route
- *       RobotRoute     (TeamCode)        what each function does on the robot
- *       MeepMeepRoute  (MeepMeepTesting) what each function does in MeepMeep (prints it)
+ *   Route          (SharedCode)       addLocation, addFunction, addEvent, ifBlock, whileBlock...
+ *     Decode_Route (SharedCode)       poses, reusable pieces, the functions routes may call, picks the route
+ *       RouteRunner  (TeamCode)         what each function does on the robot; what Decode_Auton runs
+ *       RouteRunner  (MeepMeepTesting)  what each function does in MeepMeep (prints it)
  *
- * The route files (MAINFARROUTERED, ...) are in SharedRoutes and are used by both.
+ * The route files (MAINFARROUTERED, ...) are in SharedCode and are used by both.
  * ============================================================================================== */
 @SuppressWarnings("unused")
 public abstract class Route
 {
      private static final String TAG = "SJH_RTE";
-     protected static final boolean VERBOSE = RouteConstants.logVerbose;
+    protected static final boolean VERBOSE = RobotConstants.logVerbose;
+
+     protected static TrajectoryVelocityConstraint defVelLim =
+       RobotConstants.defVelConstraint;
+     protected static TrajectoryAccelerationConstraint defAccelLim =
+       RobotConstants.defAccelConstraint;
+
+     protected static TrajectoryVelocityConstraint slwVelLim =
+       RobotConstants.slwVelConstraint;
+     protected static TrajectoryAccelerationConstraint slwAccelLim =
+       RobotConstants.slwAccelConstraint;
 
      protected static final boolean strafeDropX = false;
 
@@ -101,17 +114,29 @@ public abstract class Route
          }
      }
 
-     /** Builds the route (calls initTrajectories2).  Call once, at the end of the constructor
-      *  of the season's route class (e.g. Decode_Route), after all its settings are stored. */
+     /** Builds the route.  Call once, at the end of the constructor of the season's route
+      *  class (e.g. Decode_Route), after all its settings and poses are stored. */
      protected void buildRoute()
      {
-         initTrajectories2();
+         if (INIT_TRAJ_2 != RobotConstants.trajType)
+         {
+             initTrajectories();
+         }
+         if (INIT_TRAJ_1 != RobotConstants.trajType)
+         {
+             initTrajectories2();
+         }
      }
 
      /** Override: build the route with addLocation, addFunction, ... then finalizeTrajSeq(). */
      protected void initTrajectories2()
      {
          finalizeTrajSeq();
+     }
+
+     protected void initTrajectories()
+     {
+
      }
 
      public String toString()
@@ -121,6 +146,10 @@ public abstract class Route
 
      protected PositionOption startPos;
      protected Field.Alliance alliance;
+
+     /** ENABLE = a new piece at every addLocation, so the opmode can pause between them.
+      *  Decode_Auton sets this from its menu choice before building routes. */
+     public static Field.AutonDebug autonDebug;
 
      /** The park choice; addParkPosition routes for this key get added at the end. */
      protected PositionOption parkChoice;
@@ -132,19 +161,6 @@ public abstract class Route
      protected int sf;
      protected int sr;
      protected double flip;
-
-     /* Speed limits come from RouteConstants (each platform copies its own values in). */
-     private static TrajectoryVelocityConstraint defVelLim()   { return velConstraint(MAX_VEL, MAX_ANG_VEL); }
-     private static TrajectoryAccelerationConstraint defAccelLim() { return new ProfileAccelerationConstraint(MAX_ACCEL); }
-     private static TrajectoryVelocityConstraint slwVelLim()   { return velConstraint(SLW_VEL, SLW_ANG_VEL); }
-     private static TrajectoryAccelerationConstraint slwAccelLim() { return new ProfileAccelerationConstraint(SLW_ACCEL); }
-
-     private static TrajectoryVelocityConstraint velConstraint(double vel, double angVel)
-     {
-         return new MinVelocityConstraint(Arrays.asList(
-                 new AngularVelocityConstraint(angVel),
-                 new MecanumVelocityConstraint(vel, DT_TRACK_WIDTH)));
-     }
 
      final static int MAX_SEGMENTS = 32;
 
@@ -550,8 +566,8 @@ public abstract class Route
     {
         return new TrajectorySequenceBuilder(
                 from,
-                defVelLim(), defAccelLim(),
-                MAX_ANG_VEL, MAX_ANG_ACCEL);
+                defVelLim, defAccelLim,
+                RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
     }
 
     private void checkNotSplit(String what)
@@ -731,7 +747,7 @@ public abstract class Route
     /* ==========================================================================================
      * DRY RUN: walk the program the same way the opmode does, but with no robot.
      * MeepMeep uses this to show the path the robot would really take, with each condition
-     * answered by MeepMeepRoute.  A check that comes back false and has a timeout holds still
+     * answered by MeepMeep's RouteRunner.  A check that comes back false and has a timeout holds still
      * for the whole timeout, like the robot would.
      * ========================================================================================== */
     public interface DryRunListener
@@ -793,7 +809,7 @@ public abstract class Route
         parkMap.put(parkEnum, traj.build());
         try
   	    {
-            RobotLog.dd(TAG, "putting park position, %s", parkEnum);
+            RobotLog.dd(TAG, "putting park position, %d", parkEnum);
         }
   	    catch (Exception e)
   	    {
@@ -835,7 +851,7 @@ public abstract class Route
 	           makeNewTraj();
                newTraj = false;
 	         }
-             else if(RouteConstants.autonDebug == Field.AutonDebug.ENABLE)
+             else if(autonDebug == Field.AutonDebug.ENABLE)
 	         {
 	             //when in debug mode, default to a new Traj every time unless something set it to false
 	             newTraj = true;
@@ -851,8 +867,8 @@ public abstract class Route
                   if (null != pendingSlow)
                   {
                       if (pendingSlow <= 0) {
-                          traj.setConstraints(slwVelLim(), slwAccelLim());
-                          traj.setTurnConstraint(SLW_ANG_VEL, SLW_ANG_ACCEL);
+                          traj.setConstraints(slwVelLim, slwAccelLim);
+                          traj.setTurnConstraint(RobotConstants.SLW_ANG_VEL, RobotConstants.SLW_ANG_ACCEL);
                       }
                       else {
                           traj.setConstraints(
@@ -860,7 +876,7 @@ public abstract class Route
                                           new AngularVelocityConstraint(pendingSlow * MAX_ANG_VEL),
                                           new MecanumVelocityConstraint(pendingSlow * MAX_VEL, DT_TRACK_WIDTH))),
                                   new ProfileAccelerationConstraint(pendingSlow * MAX_ACCEL));
-                          traj.setTurnConstraint(pendingSlow * MAX_ANG_VEL, pendingSlow * MAX_ANG_ACCEL);
+                          traj.setTurnConstraint(pendingSlow * MAX_ANG_VEL, pendingSlow * RobotConstants.MAX_ANG_ACCEL);
                       }
                       pendingSlow = null;
                   }
@@ -885,8 +901,8 @@ public abstract class Route
                       justStarted = true;
                           traj = new TrajectorySequenceBuilder(
                                   firstPose,
-                                  defVelLim(), defAccelLim(),
-                                  MAX_ANG_VEL, MAX_ANG_ACCEL);
+                                  defVelLim, defAccelLim,
+                                  RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
                       break;
                   case LINE:
                       switch (head)
@@ -947,8 +963,8 @@ public abstract class Route
             justStarted = true;
             traj = new TrajectorySequenceBuilder(
                     firstPose,
-                    defVelLim(), defAccelLim(),
-                    MAX_ANG_VEL, MAX_ANG_ACCEL);
+                    defVelLim, defAccelLim,
+                    RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
         }
 
         lastPose = loc; //Setup for next time
@@ -1032,8 +1048,8 @@ public abstract class Route
                   if(value <= 0) {
                       traj = new TrajectorySequenceBuilder(
                               lastPose,
-                              slwVelLim(), slwAccelLim(),
-                              SLW_ANG_VEL, SLW_ANG_ACCEL);
+                              slwVelLim, slwAccelLim,
+                              RobotConstants.SLW_ANG_VEL, RobotConstants.SLW_ANG_ACCEL);
                   }
                   else
                   {
@@ -1046,7 +1062,7 @@ public abstract class Route
                       traj = new TrajectorySequenceBuilder(
                               lastPose,
                               vc, ac,
-                              value, value/MAX_VEL*MAX_ANG_ACCEL);
+                              value, value/MAX_VEL*RobotConstants.MAX_ANG_ACCEL);
                   }
          */
                   pendingSlow = value;
@@ -1122,8 +1138,8 @@ public abstract class Route
 
              TrajectorySequenceBuilder full = new TrajectorySequenceBuilder(
                      firstPose,
-                     defVelLim(), defAccelLim(),
-                     MAX_ANG_VEL, MAX_ANG_ACCEL);
+                     defVelLim, defAccelLim,
+                     RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL);
 
              double cumTime = 0.0;
             if(VERBOSE) { RobotLog.dd(TAG, "Done Building trajectories");}

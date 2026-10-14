@@ -6,6 +6,8 @@ import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
+import org.firstinspires.ftc.teamcode.robot.RobotConstants;
+
 /* ==============================================================================================
  * Decode_Route: everything for this season's auton that both the robot and MeepMeep use:
  *   - the poses and tangents (bottom of this file, in initPoses)
@@ -15,13 +17,13 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
  *
  * Shared by TeamCode and MeepMeepTesting.  It is abstract: each platform makes its own
  * subclass that says what the functions DO:
- *   - TeamCode:        RobotRoute     (runs the shooter, intake, ...)
- *   - MeepMeepTesting: MeepMeepRoute  (prints what would happen)
+ *   - TeamCode:        TeamCode's RouteRunner     (runs the shooter, intake, ...)
+ *   - MeepMeepTesting: MeepMeep's RouteRunner  (prints what would happen)
  *
  * To add a new function that routes can use (route.addFunction(route::myFunction)):
  *   1. add  protected abstract void myFunction();  in the list below
- *   2. write it in TeamCode's RobotRoute
- *   3. write it in MeepMeepTesting's MeepMeepRoute (usually just say("myFunction"))
+ *   2. write it in TeamCode's TeamCode's RouteRunner
+ *   3. write it in MeepMeepTesting's MeepMeep's RouteRunner (usually just say("myFunction"))
  * The compiler will tell you if you forget step 2 or 3.
  * ============================================================================================== */
 public abstract class Decode_Route extends Route
@@ -57,7 +59,7 @@ public abstract class Decode_Route extends Route
 
   /* ---------------------------------------------------------------------------------------------
    * Functions routes can call with route.addFunction(route::name).
-   * RobotRoute (TeamCode) and MeepMeepRoute (MeepMeepTesting) each fill these in.
+   * RouteRunner (TeamCode) and RouteRunner (MeepMeepTesting) each fill these in.
    * --------------------------------------------------------------------------------------------- */
   protected abstract void shootFar();
   protected abstract void shootWiffleClose();
@@ -82,7 +84,7 @@ public abstract class Decode_Route extends Route
   /** True once the AprilTag motif has been seen. */
   public abstract boolean motifFound();
 
-  /** Show the route choices on the driver station (RobotRoute does this; MeepMeep doesn't). */
+  /** Show the route choices on the driver station (TeamCode's RouteRunner does this; MeepMeep doesn't). */
   protected void dashboardConfig() {}
 
   protected void goPark()
@@ -351,8 +353,8 @@ public abstract class Decode_Route extends Route
    * ============================================================================================= */
      private void initPoses()
      {
-           botLen = RouteConstants.BOT_LEN;
-           botWid = RouteConstants.BOT_WID;
+           botLen = RobotConstants.BOT_LEN;
+           botWid = RobotConstants.BOT_WID;
 
            double rightSideLineUpToBorderAdjustment = 0.5;
 
@@ -649,7 +651,7 @@ public abstract class Decode_Route extends Route
 
 
         /* Qualifier Route Points */
-        if("B7252".equals(RouteConstants.chassis)) {
+        if(RobotConstants.bot == RobotConstants.Chassis.B7252) {
             moveAwayFromWallRedBackdrop = new Pose2d(50, 15, Math.toRadians(180));
             moveAwayFromWallBlueBackdrop = new Pose2d(-50, 15, Math.toRadians(0));
 
@@ -758,7 +760,7 @@ public abstract class Decode_Route extends Route
 
             parkRedStacksSideRt = new Pose2d(10, 50, Math.toRadians(270));
             parkRedStacksSideLft = new Pose2d(10, 50, Math.toRadians(270));
-        } else if("B7253".equals(RouteConstants.chassis)) {
+        } else if(RobotConstants.bot == RobotConstants.Chassis.B7253) {
         moveAwayFromWallRedBackdrop = new Pose2d(50, 15, Math.toRadians(180));
         moveAwayFromWallBlueBackdrop = new Pose2d(-50, 15, Math.toRadians(0));
 

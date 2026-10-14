@@ -16,7 +16,8 @@ import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
 import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
 
 import org.firstinspires.ftc.teamcode.field.Field;
-import org.firstinspires.ftc.teamcode.field.RouteConstants;
+import org.firstinspires.ftc.teamcode.field.RouteRunner;
+import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 
 import org.rowlandhall.meepmeep.MeepMeep;
 import org.rowlandhall.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
@@ -53,10 +54,13 @@ public class MeepMeepTesting
          // Declare a MeepMeep instance
          // With a field size of 800 pixels
 
-         // The route comes from SharedRoutes: the same Decode_Route and route files the robot
+         // Same RobotConstants as the robot (it's in SharedCode)
+         RobotConstants.init(RobotConstants.Chassis.B7252);
+
+         // The route comes from SharedCode: the same Decode_Route and route files the robot
          // runs.  Pick the start / park / motif here like you would in the auton menu.
-         // MeepMeepRoute.MOTIF_FOUND (and friends) answer the route's ifBlock/whileBlock checks.
-         MeepMeepRoute route = new MeepMeepRoute(START_GOAL_ROUTE_RED, INSIDEPRIMARYPARK1RED,
+         // RouteRunner.MOTIF_FOUND (and friends) answer the route's ifBlock/whileBlock checks.
+         RouteRunner route = new RouteRunner(START_GOAL_ROUTE_RED, INSIDEPRIMARYPARK1RED,
                  Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP, Field.Num_shots.THREE);
 
          TrajectorySequence seq = route.toMeepMeep();
@@ -65,10 +69,10 @@ public class MeepMeepTesting
 
          DefaultBotBuilder myBot = new DefaultBotBuilder(meepMeep)
                  .setColorScheme(new ColorSchemeRedDark())
-                 .setDimensions(RouteConstants.BOT_WID, RouteConstants.BOT_LEN)
-                 .setConstraints(RouteConstants.MAX_VEL, RouteConstants.MAX_ACCEL,
-                         RouteConstants.MAX_ANG_VEL, RouteConstants.MAX_ANG_ACCEL,
-                         RouteConstants.DT_TRACK_WIDTH);
+                 .setDimensions(RobotConstants.BOT_WID, RobotConstants.BOT_LEN)
+                 .setConstraints(RobotConstants.MAX_VEL, RobotConstants.MAX_ACCEL,
+                         RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL,
+                         RobotConstants.DT_TRACK_WIDTH);
 
          RoadRunnerBotEntity rrBotEntity = myBot.followTrajectorySequence(seq);
 //         rrBotEntity.followTrajectorySequence(seq);
