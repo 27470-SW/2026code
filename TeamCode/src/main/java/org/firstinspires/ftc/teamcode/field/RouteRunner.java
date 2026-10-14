@@ -446,6 +446,23 @@ public void moveToPosition4(){
         mTimerShoot3close.schedule(mTtShoot3close, 2000);
     }
 
+    /* Conditions for the conditionals test route (START_FAR_RED6).  Placeholders: fixed answers
+     * until the real sensor checks are written. */
+    @Override public boolean zeroBalls()  { return true; }
+    @Override public boolean notTipped()  { return false; }
+    @Override public boolean gateOpen()   { return false; }
+    @Override public boolean rowFull()    { return true; }
+
+    /** One lap of the whileBlock, then false (a while condition that never turns false never ends). */
+    private int lapsDone = 0;
+    @Override
+    public boolean anotherCycle()
+    {
+        if (lapsDone >= 1) return false;
+        lapsDone++;
+        return true;
+    }
+
     /** Condition: true once the AprilTag motif has been seen (stays true after that). */
     @Override
     public boolean motifFound()

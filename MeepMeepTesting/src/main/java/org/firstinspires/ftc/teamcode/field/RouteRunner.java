@@ -25,6 +25,13 @@ public class RouteRunner extends Decode_Route
      * Answers for the route's conditions.  Change these to see the other path in MeepMeep.
      * ---------------------------------------------------------------------------------------- */
     public static boolean MOTIF_FOUND = true;
+    // Conditionals test route (START_FAR_RED6).  Defaults show the tipped (split) path and
+    // the timed-out gate check.
+    public static boolean ZERO_BALLS  = true;
+    public static boolean NOT_TIPPED  = false;
+    public static boolean GATE_OPEN   = false;
+    public static boolean ROW_FULL    = true;
+    public static int     CYCLE_LAPS  = 1;      // laps of the whileBlock (true this many times, then false)
 
     public RouteRunner(PositionOption startPos,
                          Field.Park_Pos parkPos,
@@ -61,6 +68,21 @@ public class RouteRunner extends Decode_Route
     {
         say("motifFound? " + MOTIF_FOUND);
         return MOTIF_FOUND;
+    }
+
+    @Override public boolean zeroBalls()  { say("zeroBalls? " + ZERO_BALLS); return ZERO_BALLS; }
+    @Override public boolean notTipped()  { say("notTipped? " + NOT_TIPPED); return NOT_TIPPED; }
+    @Override public boolean gateOpen()   { say("gateOpen? "  + GATE_OPEN);  return GATE_OPEN; }
+    @Override public boolean rowFull()    { say("rowFull? "   + ROW_FULL);   return ROW_FULL; }
+
+    private int lapsDone = 0;
+    @Override
+    public boolean anotherCycle()
+    {
+        boolean again = lapsDone < CYCLE_LAPS;
+        if (again) lapsDone++;
+        say("anotherCycle? " + again);
+        return again;
     }
 
     /**

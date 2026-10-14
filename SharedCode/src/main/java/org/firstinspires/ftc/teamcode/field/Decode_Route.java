@@ -84,6 +84,19 @@ public abstract class Decode_Route extends Route
   /** True once the AprilTag motif has been seen. */
   public abstract boolean motifFound();
 
+  /* Placeholder conditions for the conditionals test route (START_FAR_RED6).  For now each one
+   * just returns a fixed answer (see both RouteRunners); the real sensor checks come later. */
+  /** True once every ball has left the robot. */
+  public abstract boolean zeroBalls();
+  /** True while the robot is upright. */
+  public abstract boolean notTipped();
+  /** True when the gate is open. */
+  public abstract boolean gateOpen();
+  /** True when the row in front of the robot is still full of balls. */
+  public abstract boolean rowFull();
+  /** True when there's time for another collect lap (whileBlock: must become false eventually). */
+  public abstract boolean anotherCycle();
+
   /** Show the route choices on the driver station (TeamCode's RouteRunner does this; MeepMeep doesn't). */
   protected void dashboardConfig() {}
 
@@ -109,6 +122,48 @@ public abstract class Decode_Route extends Route
        Pose2d lastPose;
 
        RobotLog.dd(TAG, "choosing park");
+
+       if (startPos == START_FAR_RED6)
+       {
+           // CONDITIONALS TEST ROUTE: uses every conditional (waitUntil, ifBlock, elseIfBlock,
+           // elseBlock, endIf, whileBlock, endWhile).  The moves and functions are in the CondTest
+           // files; only the control flow is here.  The answers come from the RouteRunners.
+           new CondTestShootPreload(this).makeTraj();          // START, shoot from the wall
+           waitUntil(this::zeroBalls, 2);
+
+           new CondTestGoCollect(this).makeTraj();             // TANGENT 100, SLOW -> (20, -60, 300)
+
+           ifBlock(this::notTipped);
+               addFunction(this::intakeOff);                    // just a function: robot stays put
+           elseBlock();
+               new CondTestRecoverTipped(this).makeTraj();     // drives somewhere else: route splits
+           endIf();
+
+           new CondTestCrossField(this).makeTraj();            // TANGENT 20 -> (60, 12, 0): rejoins
+
+           ifBlock(this::gateOpen, 1.5);                        // waits up to 1.5 s for the gate
+               addFunction(this::intakeOn);
+               addEvent(Route.Action.WAIT, 1);
+               addFunction(this::intakeOff);
+           elseIfBlock(this::rowFull);
+               addFunction(this::transitonUp);
+           elseBlock();
+               addFunction(this::wheelOff);
+           endIf();
+
+           new CondTestShootNear(this).makeTraj();             // (10, 60, 90), shoot, TANGENT -30 -> (58, -24, 270)
+
+           whileBlock(this::anotherCycle);
+               new CondTestCollectCycle(this).makeTraj();      // down the row and back
+           endWhile();
+
+           addFunction(this::intakeOff);
+           addFunction(this::wheelOff);
+
+           // No park move for the test route: it ends at (58, -24, 270).
+           finalizeTrajSeq();
+           return;
+       }
 
        if( startPos == START_FAR_RED_SIMPLE)
        {
@@ -185,7 +240,7 @@ public abstract class Decode_Route extends Route
            GOALROUTEBLUE t1 = new GOALROUTEBLUE(this);
            t1.makeTraj(startPos, parkPos, lastLocation);
        }
-       else if( startPos == START_FAR_RED6)
+       else if( startPos == START_FAR_RED6)    // not reached: START_FAR_RED6 runs the conditionals test route above
        {
            ROUTE6REDT t1 = new  ROUTE6REDT(this);
            t1.makeTraj(startPos, parkPos, lastLocation);
@@ -477,7 +532,7 @@ public abstract class Decode_Route extends Route
         tempParkRed = new Pose2d(sx * 57,-50,flip +sh*Math.toRadians(90));
         tempParkBlue = new Pose2d(sx * -30,-40,flip +sh*Math.toRadians(50));
 
-        startRedFar = new Pose2d(sx * 20, -60, flip + sh*Math.toRadians(90));
+        startRedFar = new Pose2d(sx * 20, -60, flip + sh*Math.toRadians(300));     // conditionals test route (was 20,-60,90)
 
         collect2 = new Pose2d (sx * 56, -46, flip + sh*Math.toRadians(67));
         helpcollect4 = new Pose2d (sx * 68, -48, flip + sh*Math.toRadians(65));
@@ -527,7 +582,7 @@ public abstract class Decode_Route extends Route
         startCBlueHigh = new Pose2d(sx * -63.25, 16, flip + sh*Math.toRadians(0));
         startCSBlueLow = new Pose2d(sx * -63.25, -15.5, flip + sh*Math.toRadians(0));
          purplePixelPlaceCenterTop = new Pose2d(sx * 28, 23.5, flip + sh*Math.toRadians(230));
-         dropCenterPixel = new Pose2d(sx * 6, 65, flip + sh*Math.toRadians(270));
+         dropCenterPixel = new Pose2d(sx * 10, 60, flip + sh*Math.toRadians(90));  // conditionals test route (was 6,65,270)
         hangSpecimen = new Pose2d(sx * 5, 44.9, flip + sh*Math.toRadians(270));
         moveBackFromSpecimen = new Pose2d(sx * 9, 55, flip + sh*Math.toRadians(270));
         sample1 = new Pose2d(sx * 47, 53.5, flip + sh*Math.toRadians(270));
@@ -591,12 +646,12 @@ public abstract class Decode_Route extends Route
         pickUpPixelStackRightCircuitBlueCenter = new Pose2d(sx * 30.5, -59, flip + sh*Math.toRadians(-90));
         pickUpPixelStackRightCircuitBlueRight = new Pose2d(sx * 33.5, -55, flip + sh*Math.toRadians(-90));
         pickUpPixelStackRightLeft = new Pose2d(sx * 35, -61, flip + sh*Math.toRadians(-90));
-        pickUpPixelStackCenter = new Pose2d(sx * 12, -59, flip + sh*Math.toRadians(-90));
+        pickUpPixelStackCenter = new Pose2d(sx * 10, -62, flip + sh*Math.toRadians(270));   // conditionals test route start (was 12,-59,-90)
         pickUpPixelStackCenterBlue = new Pose2d(sx * 17, -58, flip + sh*Math.toRadians(-90));
         backAwayBackDrop = new Pose2d(sx * 35, 43, flip + sh*Math.toRadians(180));
         underRigging = new Pose2d(sx * 66, -43, flip + sh*Math.toRadians(270));
-        pointForRobotToPixelStack = new Pose2d(sx * 59, -42, flip + sh*Math.toRadians(270));
-        pointForRobotToPixelStackBlue = new Pose2d(sx * 62, -24, flip + sh*Math.toRadians(270));
+        pointForRobotToPixelStack = new Pose2d(sx * 58, -44, flip + sh*Math.toRadians(270));      // conditionals test route (was 59,-42,270)
+        pointForRobotToPixelStackBlue = new Pose2d(sx * 58, -24, flip + sh*Math.toRadians(270));  // conditionals test route (was 62,-24,270)
         aboveRigging = new Pose2d(sx * 61, 3, flip + sh*Math.toRadians(270));
         aboveRiggingBackwards = new Pose2d(sx * 61, 8, flip + sh*Math.toRadians(90));
         underCenter = new Pose2d(sx * 36, -9, flip + sh*Math.toRadians(270));
@@ -618,7 +673,7 @@ public abstract class Decode_Route extends Route
         extraPointHigh = new Pose2d(sx*36, 23, flip + sh*Math.toRadians(90));
 
 
-        starting_point_top = new Pose2d(sx*58,18,flip + sh*Math.toRadians(180));
+        starting_point_top = new Pose2d(sx*60,12,flip + sh*Math.toRadians(0));   // conditionals test route (was 58,18,180)
         staring_point = new Pose2d(sx*50,-31,flip + sh*Math.toRadians(180));
         team_element = new Pose2d(sx*30,-28,flip + sh*Math.toRadians(90));
         white_pixel_middle = new Pose2d(sx*22,-62,flip + sh*Math.toRadians(270));
