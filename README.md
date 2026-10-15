@@ -5,18 +5,43 @@ This repo is the official [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcR
 
 | Folder | What it is |
 | --- | --- |
-| `TeamCode/` | Our robot code (OpModes, Road Runner 0.5 routes, vision, etc.) |
+| `TeamCode/` | Our robot code (OpModes, hardware, vision, etc.) |
+| `SharedCode/` | Auton routes, shared by TeamCode and MeepMeepTesting (plain Java) |
 | `MeepMeepTesting/` | Desktop Road Runner path visualizer with the BIOBUZZ field image |
 | `FtcRobotController/` | FTC SDK — avoid editing |
 | `GRIP/`, `GettingStarted/` | Vision pipeline experiments and season setup notes |
 
-## Running MeepMeep (any PC with Java 17+)
+## Auton routes: one copy for the robot and MeepMeep
 
-MeepMeep is plain Java, so it does not need Android Studio or the Android SDK:
+The routes (and `RobotConstants`) live in `SharedCode/`, and both TeamCode and MeepMeepTesting use
+those same files. Get a route working in MeepMeep, and the robot already has it: nothing to copy over.
+
+| File | Where | What goes in it |
+| --- | --- | --- |
+| `Route.java` | SharedCode | The route builder (`addLocation`, `addFunction`, `ifBlock`, ...). Doesn't change between seasons. |
+| `Decode_Route.java` | SharedCode | Every pose and tangent, reusable pieces like `shootMotif`, the list of functions routes can call, and picking the route |
+| `MAINFARROUTERED.java`, ... | SharedCode | The routes themselves |
+| `RobotConstants.java` | SharedCode | Same as always; now the robot and MeepMeep both use this one copy |
+| `RouteRunner.java` | TeamCode | The route `Decode_Auton` runs: what each function does on the robot (shooter, intake, ...) |
+| `RouteRunner.java` | MeepMeepTesting | The route MeepMeep shows: each function prints its name; answers the `ifBlock` checks |
+
+To add a function routes can call (`route.addFunction(route::myFunction)`): add
+`protected abstract void myFunction();` to `Decode_Route`, then write it in both `RouteRunner`s: TeamCode's
+(the robot code) and MeepMeepTesting's (usually just `say("myFunction")`). The build fails until all three
+are done. Pressing Run on TeamCode only builds TeamCode, so use Build > Make Project before committing
+to check MeepMeep too.
+
+SharedCode can't use Android or FTC SDK classes (`hardwareMap`, `MecanumBot`, ...), except the few that
+have a stand-in in `FtcStandIns`: `RobotLog`, `@Config`, `DcMotorSimple.Direction`, `Servo.Direction`,
+`PIDFCoefficients` and `AxesOrder`. On the robot those are the real FTC classes; in MeepMeep the stand-ins
+are used (so `RobotLog` prints to the console).
+
+## Running MeepMeep
+
+Pick the route to show (start / park / motif) at the top of `MeepMeepTesting.java`. From the repo root:
 
 ```
-cd MeepMeepTesting
-../gradlew run          # Windows: ..\gradlew.bat run
+./gradlew :MeepMeepTesting:run          # Windows: gradlew.bat :MeepMeepTesting:run
 ```
 
 In Android Studio, pick **MeepMeepTestiing** from the run configuration dropdown (next to the green Run arrow)

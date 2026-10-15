@@ -9,10 +9,15 @@ package com.example.meepmeeptesting;
 import java.awt.Image;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.awt.Toolkit;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
-import static com.example.meepmeeptesting.Field.Park_Pos.*;
-import static com.example.meepmeeptesting.Field.Start_Pos.*;
+import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
+import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
+
+import org.firstinspires.ftc.teamcode.field.Field;
+import org.firstinspires.ftc.teamcode.field.RouteRunner;
+import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 
 import org.rowlandhall.meepmeep.MeepMeep;
 import org.rowlandhall.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
@@ -49,20 +54,24 @@ public class MeepMeepTesting
          // Declare a MeepMeep instance
          // With a field size of 800 pixels
 
+         // Same RobotConstants as the robot (it's in SharedCode)
          RobotConstants.init(RobotConstants.Chassis.B7252);
 
+         // The route comes from SharedCode: the same Decode_Route and route files the robot
+         // runs.  Pick the start / park / motif here like you would in the auton menu.
+         // RouteRunner.MOTIF_FOUND (and friends) answer the route's ifBlock/whileBlock checks.
+         RouteRunner route = new RouteRunner(START_FAR_RED6, INSIDEPRIMARYPARK1RED, Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP, Field.Num_shots.THREE);
 
-         RobotConstants.MAX_LOOPS = 1;
-         DECODE_Route ffr = new DECODE_Route( START_GOAL_RED5,INSIDEPRIMARYPARK1RED, Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP,Field.Num_shots.THREE) ;
-
-         TrajectorySequence seq = ffr.fullSeq;
+         TrajectorySequence seq = route.toMeepMeep();
 
          MeepMeep meepMeep = new MeepMeep(600);
 
          DefaultBotBuilder myBot = new DefaultBotBuilder(meepMeep)
                  .setColorScheme(new ColorSchemeRedDark())
                  .setDimensions(RobotConstants.BOT_WID, RobotConstants.BOT_LEN)
-                 .setConstraints(50, 50,Math.toRadians(180), Math.toRadians(180),12);
+                 .setConstraints(RobotConstants.MAX_VEL, RobotConstants.MAX_ACCEL,
+                         RobotConstants.MAX_ANG_VEL, RobotConstants.MAX_ANG_ACCEL,
+                         RobotConstants.DT_TRACK_WIDTH);
 
          RoadRunnerBotEntity rrBotEntity = myBot.followTrajectorySequence(seq);
 //         rrBotEntity.followTrajectorySequence(seq);
@@ -87,7 +96,18 @@ public class MeepMeepTesting
          {
              throw new IllegalStateException("Field image not found on classpath: " + FIELD_IMAGE);
          }
-         Image background = Toolkit.getDefaultToolkit().getImage(imageUrl);
+         // ImageIO.read loads the whole image before MeepMeep uses it.  (Toolkit.getImage loads it
+         // in the background, and MeepMeep resizing it mid-load is what made the field image
+         // sometimes fail with a ClassCastException.)
+         Image background;
+         try
+         {
+             background = ImageIO.read(imageUrl);
+         }
+         catch (IOException e)
+         {
+             throw new IllegalStateException("Could not read field image " + FIELD_IMAGE, e);
+         }
          meepMeep.setBackground(background)
                  .setDarkMode(true)
                  .setBackgroundAlpha(0.95f)

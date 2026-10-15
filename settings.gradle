@@ -13,5 +13,12 @@ rootProject.name = '2026code'
 include ':FtcRobotController'
 include ':TeamCode'
 
+// Plain Java code shared by TeamCode and MeepMeepTesting: the Route builder, Decode_Route (poses),
+// every route file, and RobotConstants.  Edit them here once; the robot and MeepMeep both use them.
+include ':SharedCode'
+
+// MeepMeep's stand-ins for the FTC SDK classes SharedCode uses (RobotLog, @Config, ...)
+include ':FtcStandIns'
+
 // Desktop Road Runner path visualizer (plain Java, runs on any PC with a JDK)
 include ':MeepMeepTesting'

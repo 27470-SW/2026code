@@ -15,8 +15,8 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDir
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
-import org.firstinspires.ftc.teamcode.field.Decode_Route;
 import org.firstinspires.ftc.teamcode.field.Field;
+import org.firstinspires.ftc.teamcode.field.RouteRunner;
 import org.firstinspires.ftc.teamcode.field.Route;
 import org.firstinspires.ftc.teamcode.image.Detector;
 import org.firstinspires.ftc.teamcode.image.ITD_Detector;
@@ -88,6 +88,7 @@ public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuBut
         delay    = PreferenceMgr.getDelay();
         xOffset  = PreferenceMgr.getXOffset();
         autonDebug  = Field.AutonDebug.values()[PreferenceMgr.getEnableAutonDebug()];
+        Route.autonDebug = autonDebug;   // the shared Route reads it from there
 
         lastLocation = Field.Wiffle_Pos.values()[PreferenceMgr.getLastLoc()];
         motif = PreferenceMgr.getMotif();
@@ -440,9 +441,9 @@ public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuBut
         motif = Field.Motif.SHOOTPPG;       //TODO: remove this when the Preference Mgr is setup for motif
         numShot = Field.Num_shots.THREE;    //TODO: remove this when the Preference Mgr is setup for motif
 
-        routePPG = new Decode_Route(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPPG, numShot);
-        routePGP = new Decode_Route(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPGP, numShot);
-        routeGPP = new Decode_Route(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTGPP, numShot);
+        routePPG = new RouteRunner(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPPG, numShot);
+        routePGP = new RouteRunner(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTPGP, numShot);
+        routeGPP = new RouteRunner(robot, startPos, parkPos, lastLocation,Field.Motif.SHOOTGPP, numShot);
 
         resetBotLocation(routePPG.start);
         initHdg = routePPG.start.getHeading();
@@ -471,7 +472,7 @@ public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuBut
         RobotLog.ii(TAG, "BOT      %s", robotName);
         RobotLog.dd(TAG, "Robot CPI " + RobotConstants.DT_CPI);
         RobotLog.dd(TAG, "BOTDIR=%s START_DDIR =%s",
-            RobotConstants.DT_DIR, startDdir);
+            BasicBot.DT_DIR, startDdir);
 
         dashboard.displayText(0, "READY TO START");
     }
@@ -915,25 +916,77 @@ boolean    printOnce = true;
     public void doAuton(Route autonRoute)
     {
         RobotLog.dd(TAG, "In doAuton");
-        int trajNum = 0;
 
-        if(null != autonRoute.trajList)
+        if(null == autonRoute.trajList || autonRoute.program.isEmpty())
         {
-            resetBotLocation(autonRoute.trajList.get(0).start());
-            for (TrajectorySequence tSeq : autonRoute.trajList)
+            RobotLog.dd(TAG, "Route has nothing to run");
+            return;
+        }
+
+        if (autonRoute instanceof RouteRunner)
+        {
+            ((RouteRunner) autonRoute).opMode = this;   // lets conditions such as route::motifFound use the camera
+        }
+        Pose2d startPose = autonRoute.getStart();
+        resetBotLocation(null != startPose ? startPose : autonRoute.trajList.get(0).start());
+
+        /* Walk the route's state machine.  Without conditionals this is simply
+         * "drive piece 0, drive piece 1, ..." in order, like before. */
+        int step = 0;
+        while (opModeIsActive() && step >= 0 && step < autonRoute.program.size())
+        {
+            Route.Step s = autonRoute.program.get(step);
+            switch (s.type)
             {
-                trajNum++;
+                case RUN:
+                    String seqName = String.format(Locale.US, "Seq %d", s.piece + 1);
+                    dashboard.displayText(4, seqName);
+                    performTrajSeq(autonRoute.trajList.get(s.piece), seqName);
+                    step++;
+                    break;
 
-                String seqName = String.format(Locale.US, "Seq %d",
-                        trajNum);
-                dashboard.displayText(4, seqName);
+                case CHECK:
+                    boolean result = waitForCondition(s.condition, s.timeoutSec);
+                    RobotLog.ii(TAG, "step %d %s: %s", step, s.label,
+                            result ? "true" : (s.timeoutSec > 0 ? "timed out" : "false"));
+                    step = result ? step + 1 : s.target;
+                    break;
 
-                performTrajSeq(tSeq, seqName);
+                case JUMP:
+                    step = s.target;
+                    // keep the robot updated even if a loop has nothing to drive
+                    robot.update();
+                    robot.finishFrame();
+                    break;
             }
         }
-        else
+    }
+
+    /** Ask a route condition; a condition that crashes counts as false instead of ending auton. */
+    private boolean checkCondition(Route.Condition c)
+    {
+        try
         {
-            RobotLog.dd(TAG, "trajList is null");
+            return c.check();
+        }
+        catch (Exception e)
+        {
+            RobotLog.ee(TAG, "Condition failed (%s); treating it as false", e.toString());
+            return false;
+        }
+    }
+
+    /** Robot holds still; true as soon as the condition is true, false on timeout.
+     *  timeoutSec 0 = check once. */
+    private boolean waitForCondition(Route.Condition c, double timeoutSec)
+    {
+        ElapsedTime waitTimer = new ElapsedTime();
+        while (true)
+        {
+            if (checkCondition(c)) return true;
+            if (!opModeIsActive() || waitTimer.seconds() >= timeoutSec) return false;
+            robot.update();     // odometry, shooter, etc. keep running while we wait
+            robot.finishFrame();
         }
     }
 
@@ -1129,10 +1182,10 @@ boolean    printOnce = true;
 
     private final ExecutorService es = Executors.newSingleThreadExecutor();
 
-    private Decode_Route route;
-    private Decode_Route routePPG;
-    private Decode_Route routePGP;
-    private Decode_Route routeGPP;
+    private RouteRunner route;
+    private RouteRunner routePPG;
+    private RouteRunner routePGP;
+    private RouteRunner routeGPP;
 
 
 
