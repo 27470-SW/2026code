@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.field;
 
-import static org.firstinspires.ftc.teamcode.field.Field.Wiffle_Pos.*;
-import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Movement.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Heading.*;
 import static org.firstinspires.ftc.teamcode.field.Route.TeamElement.*;
@@ -13,14 +11,14 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 public class ROUTE6REDT {
     String TAG = "SAMPLE_ROUTE";
-    Decode_Route route;
+    BioBuzz_Route route;
     private Field.Parks stackToBack;
     private Field.Parks pixelStack;
 
     private Route.TeamElement teamElement;
     private Field.Alliance alliance;
 
-    public ROUTE6REDT(Decode_Route constructorRoute) {
+    public ROUTE6REDT(BioBuzz_Route constructorRoute) {
         route = constructorRoute;
     }
 

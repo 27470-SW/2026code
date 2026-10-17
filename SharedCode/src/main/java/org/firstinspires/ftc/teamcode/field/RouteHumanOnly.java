@@ -7,7 +7,7 @@ import static org.firstinspires.ftc.teamcode.field.Route.Movement.LINE;
 import static org.firstinspires.ftc.teamcode.field.Route.Movement.SPLINE;
 import static org.firstinspires.ftc.teamcode.field.Route.Movement.START;
 import static org.firstinspires.ftc.teamcode.field.Route.TeamElement.RIGHT;
-import static org.firstinspires.ftc.teamcode.field.Decode_Route.numshot;
+import static org.firstinspires.ftc.teamcode.field.BioBuzz_Route.numshot;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
@@ -15,14 +15,14 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 public class
 RouteHumanOnly {
     String TAG = "SAMPLE_ROUTE";
-    Decode_Route route;
+    BioBuzz_Route route;
     private Field.Parks stackToBack;
     private Field.Parks pixelStack;
 
     private Route.TeamElement teamElement;
     private Field.Alliance alliance;
 
-    public RouteHumanOnly(Decode_Route constructorRoute) {
+    public RouteHumanOnly(BioBuzz_Route constructorRoute) {
         route = constructorRoute;
     }
 

@@ -26,15 +26,15 @@ import org.firstinspires.ftc.teamcode.robot.RobotConstants;
  *   3. write it in MeepMeepTesting's MeepMeep's RouteRunner (usually just say("myFunction"))
  * The compiler will tell you if you forget step 2 or 3.
  * ============================================================================================== */
-public abstract class Decode_Route extends Route
+public abstract class BioBuzz_Route extends Route
 {
   private static final String TAG = "RouteClass";
 
-  public Decode_Route(PositionOption startPos,
-                      Field.Park_Pos parkPos,
-                      Field.Wiffle_Pos lastLocation,
-                      Field.Motif motif,
-                      Field.Num_shots numshot
+  public BioBuzz_Route(PositionOption startPos,
+                       Field.Park_Pos parkPos,
+                       Field.Wiffle_Pos lastLocation,
+                       Field.Motif motif,
+                       Field.Num_shots numshot
   )
   {
     super(startPos);
@@ -42,7 +42,7 @@ public abstract class Decode_Route extends Route
     this.parkPos = parkPos;
     this.lastLocation = lastLocation;
     this.motif = motif;
-    Decode_Route.numshot = numshot;
+    BioBuzz_Route.numshot = numshot;
     parkChoice = parkPos;
     buildRoute();
   }
@@ -76,6 +76,8 @@ public abstract class Decode_Route extends Route
   protected abstract void transitonUp();
   public    abstract void deliverSample();
   public    abstract void armToDrop();
+    protected abstract void inclinePlaneDown ();
+    protected abstract void inclinePlaneUp ();
 
   /* ---------------------------------------------------------------------------------------------
    * Conditions routes can use with waitUntil / ifBlock / whileBlock, e.g.
@@ -130,11 +132,7 @@ public abstract class Decode_Route extends Route
            ComplexFarBlue t1 = new ComplexFarBlue(this);
            t1.makeTraj(START_FAR_RED_SIMPLE, parkPos, lastLocation);
        }
-
-
-
-
-       if( startPos == MAINFARROUTERED)
+       else if( startPos == MAINFARROUTERED)
        {
            MAINFARROUTERED t1 = new MAINFARROUTERED(this);
            t1.makeTraj(startPos, parkPos, lastLocation);
@@ -203,8 +201,16 @@ public abstract class Decode_Route extends Route
            t1.makeTraj(startPos, parkPos, lastLocation);
        }
 
-       MoveToParkPOSDECODE t1 = new MoveToParkPOSDECODE(this);
-       t1.makeTraj(parkPos,alliance);
+
+
+       new GoToFlower(this).makeTraj(startPos, parkPos, lastLocation);
+       new intakeFromGarden(this).makeTraj(startPos, parkPos, lastLocation);
+       new START_FIRST(this).makeTraj(startPos, parkPos, lastLocation);
+
+
+
+//       MoveToParkPOSDECODE t1 = new MoveToParkPOSDECODE(this);
+//       t1.makeTraj(parkPos,alliance);
 
        lastPose = this.getEnd();
        RobotLog.dd(TAG, "Park choice %s",parkPos);
@@ -873,7 +879,20 @@ public abstract class Decode_Route extends Route
         parkRedStacksSideRt = new Pose2d(10, 50, Math.toRadians(270));
         parkRedStacksSideLft = new Pose2d(10, 50, Math.toRadians(270));
     }
-        /* End Qualifier Route Points */
+
+         shootFirst = new Pose2d(sx * -12, -58, flip + sh*Math.toRadians(-90));
+         midPointShootFirstToGarden = new Pose2d(sx * -40, -58, flip + sh*Math.toRadians(180));
+         aboveShootFirst = new Pose2d(sx * -12, -45, flip + sh*Math.toRadians(-90));
+         aboveShootFirstPart2 = new Pose2d(sx * -13, -45, flip + sh*Math.toRadians(180));
+         garden = new Pose2d(sx * -59, -58, flip + sh*Math.toRadians(180));
+
+         moveToFlower = new Pose2d(sx*-56,-20,flip + sh*Math.toRadians(180));
+         startFirst = new Pose2d(sx*-12,-58,flip + sh*Math.toRadians(-90));
+         shootFlower = new Pose2d(sx*-12,-58,flip + sh*Math.toRadians(-90));
+         preParkLoadZoneRed = new Pose2d(sx*-50.8,-40,flip + sh*Math.toRadians(90));
+         parkLoadZoneRed = new Pose2d(sx*-53,22.9,flip + sh*Math.toRadians(90));
+
+         /* End Qualifier Route Points */
 
         //2023 tangents
         ninetyFive = flip + sh*Math.toRadians(95);
@@ -933,7 +952,20 @@ public abstract class Decode_Route extends Route
     protected Pose2d center;
     protected Pose2d top;
 
-   protected Pose2d middle;
+    protected Pose2d shootFirst;
+
+    protected Pose2d midPointShootFirstToGarden;
+    protected Pose2d aboveShootFirst;
+    protected Pose2d aboveShootFirstPart2;
+    protected Pose2d garden;
+
+    protected Pose2d moveToFlower;
+    protected Pose2d startFirst;
+    protected Pose2d shootFlower;
+    protected Pose2d preParkLoadZoneRed;
+    protected Pose2d parkLoadZoneRed;
+
+    protected Pose2d middle;
 
     protected Pose2d bottom;
      protected Pose2d staring_point;

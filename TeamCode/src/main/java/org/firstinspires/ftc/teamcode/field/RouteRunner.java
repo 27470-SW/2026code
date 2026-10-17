@@ -35,7 +35,7 @@ import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.*;
  * Helpers that only these functions use (moveArmToDrop, openclaw, ...) can just live here.
  * ============================================================================================== */
 @SuppressWarnings("unused")
-public class RouteRunner extends Decode_Route
+public class RouteRunner extends BioBuzz_Route
 {
     private static final String TAG = "SJH_RTE";
 
@@ -335,7 +335,12 @@ public void moveToPosition4(){
          robot.shooter.controlShooterW.setWheelVelocity(1225);
          RobotLog.dd(TAG, "Shoot Balls Close");
      }
-     @Override
+
+    protected void inclinePlaneDown (){RobotLog.dd(TAG, "InclinePlaneDown");}
+    protected void inclinePlaneUp (){RobotLog.dd(TAG, "InclinePlaneUp");}
+
+
+    @Override
      protected void transitonUp(){
          RobotLog.dd(TAG, "Transition Up ALL");
      }

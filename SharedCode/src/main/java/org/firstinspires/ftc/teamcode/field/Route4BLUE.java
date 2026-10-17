@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.field;
 import static org.firstinspires.ftc.teamcode.field.Field.Num_shots.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Movement.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Heading.*;
-import static org.firstinspires.ftc.teamcode.field.Decode_Route.numshot;
+import static org.firstinspires.ftc.teamcode.field.BioBuzz_Route.numshot;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
@@ -11,14 +11,14 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 public class Route4BLUE {
     String TAG = "ROUTE4BLUE";
-    Decode_Route route;
+    BioBuzz_Route route;
     private Field.Parks stackToBack;
     private Field.Parks pixelStack;
 
     private Route.TeamElement teamElement;
     private Field.Alliance alliance;
 
-    public Route4BLUE(Decode_Route constructorRoute) {
+    public Route4BLUE(BioBuzz_Route constructorRoute) {
         route = constructorRoute;
     }
 

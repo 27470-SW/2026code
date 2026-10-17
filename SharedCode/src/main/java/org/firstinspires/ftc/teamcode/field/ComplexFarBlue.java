@@ -12,14 +12,14 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 public class ComplexFarBlue {
     String TAG = "SAMPLE_ROUTE";
-    Decode_Route route;
+    BioBuzz_Route route;
     private Field.Parks stackToBack;
     private Field.Parks pixelStack;
 
     private Route.TeamElement teamElement;
     private Field.Alliance alliance;
 
-    public ComplexFarBlue(Decode_Route constructorRoute) {
+    public ComplexFarBlue(BioBuzz_Route constructorRoute) {
         route = constructorRoute;
     }
 

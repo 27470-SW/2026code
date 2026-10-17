@@ -100,7 +100,7 @@ public class RobotConstants
   public final static int GPP_APRIL_TAG = 21;
   public final static int PGP_APRIL_TAG = 22;
   public final static int PPG_APRIL_TAG = 23;
-  public static  double SHOOTER_VELOCITY = 1300;
+  public static  double SHOOTER_VELOCITY = 1850;
   public static int SHOOT_CLOSE_TRAJ = -400;
   public static int SHOOT_FAR_TRAJ = -1250;
     public static double SHOOT_SERVO_FAR = 0.62;

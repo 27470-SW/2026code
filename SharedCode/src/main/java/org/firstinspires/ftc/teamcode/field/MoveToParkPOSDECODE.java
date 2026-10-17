@@ -9,13 +9,13 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 public class MoveToParkPOSDECODE {
     String TAG = "PARK_POS_DECODE";
-    Decode_Route route;
+    BioBuzz_Route route;
     private Field.Parks stackToBack;
     private Field.Parks pixelStack;
 
     private Route.TeamElement teamElement;
     private Field.Alliance alliance;
-    public MoveToParkPOSDECODE(Decode_Route constructorRoute) {
+    public MoveToParkPOSDECODE(BioBuzz_Route constructorRoute) {
         route = constructorRoute;
     }
 

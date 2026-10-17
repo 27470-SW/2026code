@@ -19,7 +19,7 @@ import java.util.List;
  * The routes and poses are in SharedCode: the same files the robot runs.
  * TeamCode has its own RouteRunner with the real robot version of these functions.
  * ============================================================================================== */
-public class RouteRunner extends Decode_Route
+public class RouteRunner extends BioBuzz_Route
 {
     /* ----------------------------------------------------------------------------------------
      * Answers for the route's conditions.  Change these to see the other path in MeepMeep.
@@ -56,6 +56,8 @@ public class RouteRunner extends Decode_Route
     @Override public    void deliverSample()                   { say("Deliver sample"); }
     @Override public    void armToDrop()                       { say("Arm to drop"); }
 
+    protected void inclinePlaneDown (){System.out.println("InclinePlaneDown");}
+    protected void inclinePlaneUp (){System.out.println("InclinePlaneUp");}
     @Override
     public boolean motifFound()
     {
