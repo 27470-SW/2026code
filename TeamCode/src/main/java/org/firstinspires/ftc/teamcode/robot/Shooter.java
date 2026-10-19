@@ -239,14 +239,16 @@ public void stopWheel(){
     }
 
     boolean usePIDs = true;
-    boolean useDistance = false;
+    boolean useDistance = true;
     public double distanceWVelocity( double distance){
-        if(ballCount == 1) {
-            return DWV_M1 * (distance + DWV_K1) + DWV_B1;
-            //        return MIN_W_SPEED + distance * (MAX_W_SPEED - MIN_W_SPEED) / (MAX_SHOOTER_DIST - MIN_SHOOTER_DIST);
-        }else{
-            return DWV_M3 * (distance + DWV_K3) + DWV_B3;
-        }
+    if(CLOSE_SHOOTER_DIST == distance ) return SHOOTER_VELOCITY_CLOSE;
+    else return SHOOTER_VELOCITY;
+//        if(ballCount == 1) {
+//            return DWV_M1 * (distance + DWV_K1) + DWV_B1;
+//            //        return MIN_W_SPEED + distance * (MAX_W_SPEED - MIN_W_SPEED) / (MAX_SHOOTER_DIST - MIN_SHOOTER_DIST);
+//        }else{
+//            return DWV_M3 * (distance + DWV_K3) + DWV_B3;
+//        }
     }
 
 
