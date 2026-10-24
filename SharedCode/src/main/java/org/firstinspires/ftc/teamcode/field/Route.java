@@ -145,7 +145,11 @@ public abstract class Route
      }
 
      protected PositionOption startPos;
-     protected Field.Alliance alliance;
+     protected PositionOption direction;
+     protected PositionOption under_hive;
+
+
+    protected Field.Alliance alliance;
 
      /** ENABLE = a new piece at every addLocation, so the opmode can pause between them.
       *  Decode_Auton sets this from its menu choice before building routes. */

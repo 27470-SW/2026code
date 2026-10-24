@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode.field;
 
 import com.qualcomm.robotcore.util.RobotLog;
 
+import static org.firstinspires.ftc.teamcode.field.Field.Direction.*;
 import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
+import static org.firstinspires.ftc.teamcode.field.Field.Under_Hive.*;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
@@ -57,6 +59,8 @@ public abstract class BioBuzz_Route extends Route
   protected Field.Parks[] pixelStacks;
   protected int numCycles = 0;
 
+  public boolean parking = false;
+
   /* ---------------------------------------------------------------------------------------------
    * Functions routes can call with route.addFunction(route::name).
    * RouteRunner (TeamCode) and RouteRunner (MeepMeepTesting) each fill these in.
@@ -66,6 +70,21 @@ public abstract class BioBuzz_Route extends Route
   protected abstract void shoot1();
   protected abstract void shoot2();
   protected abstract void shoot3();
+  boolean doTipped = true;
+  protected boolean tipped(){
+      doTipped = !doTipped;
+      return doTipped;
+  }
+  protected boolean extraTime(){return true;}
+  protected boolean haveWiffles(){return true;}
+
+  protected boolean needShoot(){return true;}
+  //protected abstract boolean isParking();
+ // protected abstract boolean whileBlock();
+  //protected abstract boolean ifBlock();
+  protected boolean outParking(){return true;}
+
+  protected boolean SD(){return true;}
   protected abstract void shootAllThree();
   protected abstract void shoot3Wiffles();
   public    abstract void shoot3Wifflesfixed();
@@ -78,6 +97,23 @@ public abstract class BioBuzz_Route extends Route
   public    abstract void armToDrop();
     protected abstract void inclinePlaneDown ();
     protected abstract void inclinePlaneUp ();
+
+
+    protected boolean flower1Full = true;
+    protected boolean flower2Full = true;
+
+    protected boolean gardenFull = true;
+
+
+
+    public int parkingLoops = 0;
+    public boolean isParking() {
+        if(parkingLoops<=10){
+            parkingLoops++;
+            return false;
+        }
+        return true;
+    }
 
   /* ---------------------------------------------------------------------------------------------
    * Conditions routes can use with waitUntil / ifBlock / whileBlock, e.g.
@@ -112,7 +148,9 @@ public abstract class BioBuzz_Route extends Route
 
        RobotLog.dd(TAG, "choosing park");
 
-       if( startPos == START_FAR_RED_SIMPLE)
+
+
+      /* if( startPos == START_FAR_RED_SIMPLE)
        {
            SimpleFarRED t1 = new SimpleFarRED(this);
            t1.makeTraj(START_FAR_RED_SIMPLE, parkPos, lastLocation);
@@ -200,12 +238,91 @@ public abstract class BioBuzz_Route extends Route
              FarStayFarRed t1 = new FarStayFarRed(this);
            t1.makeTraj(startPos, parkPos, lastLocation);
        }
+*/
+       addLocation(staring_point,Movement.START, Heading.HEAD_DEFAULT);
+
+       whileBlock(() -> !isParking()); {
+        //Start 1
+           ifBlock(this::haveWiffles);{
+               //Move to shoot
+       }
+            elseIfBlock(() -> flower1Full && tipped() || !flower2Full);{
+                //go to flower 1
+           flower1Full = false;
+
+       }
+            elseIfBlock(() -> gardenFull);{
+                //go to garden
+           addFunction(() -> gardenFull = false);
+       }
+            elseIfBlock(this::tipped);{
+                //collect(1,1,!PartnerPark)
+
+       }
+            elseIfBlock(() -> flower2Full);{
+                //goto flower2
+           addFunction(() -> flower2Full = false);
+
+       }
+            elseBlock();{
+                //collect(1,2,!PartnerPark)
+       }
+       //start 2
+
+            ifBlock(this::haveWiffles);{
+                //move to shoot
+       }
+            elseIfBlock(() -> flower2Full);{
+                //goto flower2
+           addFunction(() -> flower2Full = false);
+       }
+            elseIfBlock(() -> !tipped() && gardenFull);{
+                //goto Garden
+           addFunction(() -> gardenFull = false);
+       }
+            elseIfBlock(() -> !tipped() && flower2Full);{
+           //goto flower2
+           addFunction(() -> flower2Full = false);
+       }
+            elseIfBlock(() -> !tipped());{
+                //collect(2,1,!PartnerPark)
+       }
+            elseIfBlock(() -> flower1Full);
+       {
+           //go to flower 1
+           addFunction(() -> flower1Full = false);
+       }
+            elseIfBlock(() -> extraTime());{
+            //go to garden
+       }
+            elseBlock();{
+            //collect(2,2,!PartnerPark)
+       }
 
 
 
-       new GoToFlower(this).makeTraj(startPos, parkPos, lastLocation);
-       new intakeFromGarden(this).makeTraj(startPos, parkPos, lastLocation);
-       new START_FIRST(this).makeTraj(startPos, parkPos, lastLocation);
+
+          whileBlock(() -> needShoot() && !isParking()); {
+                waitUntil(() -> tipped() || SD(), 3);
+                ifBlock(this::tipped);{
+                // Do we need a shoot state?
+                }
+                elseBlock();{
+                //use state goToOtherSide
+           }
+
+       }
+   }
+       new park(this).makeTraj(startPos, parkPos, lastLocation);
+
+
+
+
+
+
+       //new GoToFlower(this).makeTraj(startPos, parkPos, lastLocation);
+      // new intakeFromGarden(this).makeTraj(startPos, parkPos, lastLocation);
+      // new park(this).makeTraj(startPos, parkPos, lastLocation);
 
 
 
@@ -217,25 +334,7 @@ public abstract class BioBuzz_Route extends Route
 
        RobotLog.dd(TAG, "route made");
 
-/*
-       RobotLog.dd(TAG, "making park");
-       try{
-           Pose2d parkStrt;
-            if(PreferenceMgr.getCircuit() == 0){
-                parkStrt = new Pose2d(dropOnTapeThenBackdrop.getLastPose().getX(), dropOnTapeThenBackdrop.getLastPose().getY(), dropOnTapeThenBackdrop.getLastPose().getHeading());
-            }else{
-                parkStrt = new Pose2d(circuit1.getLastPose().getX(), circuit1.getLastPose().getY(), circuit1.getLastPose().getHeading());
-            }
-
-           moveToPark.addLocation(parkStrt, START, HEAD_CONSTANT);
-       }catch(Exception e){ RobotLog.ww(TAG,"unable to add lastPose(2)");}
-       MoveToPark t5 = new MoveToPark(moveToPark);
-       t5.makeTraj(parkPos, alliance);
-       RobotLog.dd(TAG, "park made");
-
-       createExtraMovementRoutes();
-*/
-        //Always do this at the end of initTrajectories2
+//Always do this at the end of initTrajectories2
        // finalizeAllTrajSeqs();
 	   finalizeTrajSeq();
     }
@@ -881,6 +980,15 @@ public abstract class BioBuzz_Route extends Route
     }
 
          shootFirst = new Pose2d(sx * -12, -58, flip + sh*Math.toRadians(-90));
+         shootSecond = new Pose2d(sx * -12, 58, flip + sh*Math.toRadians(90));
+         goAcrossFieldPointThree = new Pose2d(sx * -40, -35, flip + sh*Math.toRadians(-90));
+         goAcrossFieldPointTwo = new Pose2d(sx * -40, 35, flip + sh*Math.toRadians(90));
+
+         underHive1 = new Pose2d(sx * -12, -30, flip + sh*Math.toRadians(0));
+         underHive2 = new Pose2d(sx * -12, 30, flip + sh*Math.toRadians(0));
+
+
+
          midPointShootFirstToGarden = new Pose2d(sx * -40, -58, flip + sh*Math.toRadians(180));
          aboveShootFirst = new Pose2d(sx * -12, -45, flip + sh*Math.toRadians(-90));
          aboveShootFirstPart2 = new Pose2d(sx * -13, -45, flip + sh*Math.toRadians(180));
@@ -953,6 +1061,19 @@ public abstract class BioBuzz_Route extends Route
     protected Pose2d top;
 
     protected Pose2d shootFirst;
+
+    protected Pose2d shootSecond;
+
+    protected Pose2d underHive1;
+
+    protected Pose2d underHive2;
+
+
+
+    protected Pose2d goAcrossFieldPointTwo;
+
+    protected Pose2d goAcrossFieldPointThree;
+
 
     protected Pose2d midPointShootFirstToGarden;
     protected Pose2d aboveShootFirst;

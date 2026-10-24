@@ -48,20 +48,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
 import static org.firstinspires.ftc.teamcode.opModes.MecanumTeleop.VERBOSE;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_GOAL_APRIL_TAG;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.GPP_APRIL_TAG;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.PGP_APRIL_TAG;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.PPG_APRIL_TAG;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_GOAL_APRIL_TAG;
 
 //@SuppressWarnings("ConstantConditions")
 @SuppressWarnings("StatementWithEmptyBody")
 @Config
 @Autonomous(name="Decode Auton", group="Auton")
 //@Disabled
-public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuButtons
+public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuButtons
 {
     private static final String TAG = "SJH_PPA";
 
@@ -79,7 +76,7 @@ public class Decode_Auton extends InitLinearOpMode // implements FtcMenu.MenuBut
     public static Field.Motif motif;
     public static Field.Num_shots numShot;
 
-    public Decode_Auton()
+    public BioBuzz_Auton()
     {
         RobotLog.dd(TAG, "PPAuto CTOR");
         alliance = Field.Alliance.valueOf(PreferenceMgr.getAllianceColor());

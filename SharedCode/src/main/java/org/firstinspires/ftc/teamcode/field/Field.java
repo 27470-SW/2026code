@@ -43,6 +43,23 @@ public abstract class Field
 
     }
 
+    public enum Direction implements PositionOption
+    {
+        //values(direction):
+        FROM_FIRST_TO_SECOND,
+        FROM_SECOND_TO_FIRST
+
+    }
+
+    public enum Under_Hive implements PositionOption
+    {
+        //values(direction):
+        UNDER_HIVE,
+        OUTSIDE_OF_HIVE
+
+    }
+
+
     public enum StartPos implements PositionOption
     {
         START_SAMPLES,
@@ -74,6 +91,7 @@ public abstract class Field
         START_FAR_BLUE6,
         START_FAR_BLUE_SIMPLE,
         START_FARFAR_BLUE_SIMPLE,
+        SHOOTFIRST
 
 
         }

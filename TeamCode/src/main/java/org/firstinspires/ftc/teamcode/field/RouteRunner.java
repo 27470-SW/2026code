@@ -5,7 +5,7 @@ import static android.os.SystemClock.sleep;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.teamcode.opModes.Decode_Auton;
+import org.firstinspires.ftc.teamcode.opModes.BioBuzz_Auton;
 import org.firstinspires.ftc.teamcode.robot.MecanumBot;
 import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.util.CommonUtil;
@@ -54,7 +54,7 @@ public class RouteRunner extends BioBuzz_Route
     protected MecanumBot robot;
 
     /** Set by the opmode before running, so conditions can use the camera, match timer, etc. */
-    public Decode_Auton opMode;
+    public BioBuzz_Auton opMode;
 
     public final static int INIT_CONE_STACK = 5;
     public static int conestackNum = INIT_CONE_STACK;
@@ -657,7 +657,7 @@ public void moveToPosition4(){
 
     }
 */
-    public void runRoute(Decode_Auton opMode){
+    public void runRoute(BioBuzz_Auton opMode){
 
         opMode.doAuton(this);
       //  initExtraMovements(opMode);
