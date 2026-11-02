@@ -44,7 +44,7 @@ public class Shooter
             shtmode = RUN_USING_ENCODER;
         }
     }
-    public boolean initShooter()
+    public boolean initShooter(String shoot, BallType ball)
     {
         boolean success = false;
         try{
@@ -53,14 +53,16 @@ public class Shooter
         catch (Exception e){}
         try
         {
-            shooterW = hwMap.get(DcMotorEx.class, "shoot");
-            shooterW.setDirection(DcMotor.Direction.REVERSE);
+            shooterW = hwMap.get(DcMotorEx.class, shoot);
+            if(ball == BallType.POLLEN) shooterW.setDirection(DcMotor.Direction.FORWARD);
+            else shooterW.setDirection(DcMotor.Direction.REVERSE);
+
             shooterW.setPower(0);
             shooterW.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             shooterW.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             shooterW.setMode(RUN_USING_ENCODER);
 
-            controlShooterW = new PIDControl(hwMap, "shoot");
+            controlShooterW = new PIDControl(hwMap, shoot);
             controlShooterW.init(SHOOTER_KP, SHOOTER_KI, SHOOTER_KD, SHOOTER_KF);
 
             shooterW2 = hwMap.get(DcMotorEx.class, "shoot2");
@@ -109,10 +111,10 @@ public class Shooter
 
 
         vs = hwMap.get(VoltageSensor.class, "Control Hub");
-        shooter1 = new Transition("shooter1", hwMap);
+        shooter1 = new Transition("shooter1T", hwMap);
     //    shooter2 = new Transition("shooter2", hwMap);
     //    shooter3 = new Transition("shooter3", hwMap);
-        if(shooter1 != null) shooter1.init(TRANSITION_RESTPOINT1, false);
+    //    if(shooter1 != null) shooter1.init(TRANSITION_RESTPOINT1, false);
     //    if(shooter2 != null) shooter2.init(TRANSITION_RESTPOINT2, true);
     //    if(shooter3 != null) shooter3.init(TRANSITION_RESTPOINT3, false);
 
@@ -240,16 +242,22 @@ public void stopWheel(){
 
     boolean usePIDs = true;
     boolean useDistance = true;
-    public double distanceWVelocity( double distance){
-    if(CLOSE_SHOOTER_DIST == distance ) return SHOOTER_VELOCITY_CLOSE;
-    else return SHOOTER_VELOCITY;
+    public double distanceWVelocityP( double distance) {
+        if (CLOSE_SHOOTER_DIST == distance) return SHOOTER_VELOCITY_POLLEN;
+        else return POLLEN_VELOCITY_CLOSE;
+    }
+    public double distanceWVelocityN( double distance) {
+        if (CLOSE_SHOOTER_DIST == distance) return SHOOTER_VELOCITY_NECTAR;
+        else return NECTAR_VELOCITY_CLOSE;
+    }
+
 //        if(ballCount == 1) {
 //            return DWV_M1 * (distance + DWV_K1) + DWV_B1;
 //            //        return MIN_W_SPEED + distance * (MAX_W_SPEED - MIN_W_SPEED) / (MAX_SHOOTER_DIST - MIN_SHOOTER_DIST);
 //        }else{
 //            return DWV_M3 * (distance + DWV_K3) + DWV_B3;
 //        }
-    }
+
 
 
 
@@ -268,24 +276,30 @@ public void stopWheel(){
         controlShooterW.setWheelVelocity(1550);
     }
 
-    public void spinShooterW(double distance)
+    public void spinShooterW(double distance, BallType ball)
     {
         dist = distance;
         double voltage = vs.getVoltage();
         if(usePIDs) {
             if (controlShooterW != null) {
                 if (useDistance) {
-                    double distanceShooterVelocity = distanceWVelocity(distance);
+                    double distanceShooterVelocity = ball == BallType.POLLEN ? distanceWVelocityP(distance) :distanceWVelocityN(distance) ;
                     controlShooterW.setWheelVelocity(distanceShooterVelocity);
                 }
+
                 else {
-                    controlShooterW.setWheelVelocity(SHOOTER_VELOCITY);
+                    if(ball == BallType.POLLEN) {
+                        controlShooterW.setWheelVelocity(POLLEN_VELOCITY_CLOSE);
+                    }
+                    else{
+                        controlShooterW.setWheelVelocity(NECTAR_VELOCITY_CLOSE);
+                    }
                 }
             }
         }
         else {
-            if (shooterW != null) shooterW.setVelocity(SHOOTER_VELOCITY);
-            if (shooterW2 != null) shooterW2.setVelocity(SHOOTER_VELOCITY);
+            if (shooterW != null) shooterW.setVelocity(POLLEN_VELOCITY_CLOSE);
+            if (shooterW2 != null) shooterW2.setVelocity(POLLEN_VELOCITY_CLOSE);
         }
     }
     public double getFilteredVelocity(){
@@ -298,7 +312,7 @@ public void stopWheel(){
         if(shooterW2 != null) shooterW2.setMode(mode);
     }
     public void resetTransition() {
-        shooter1.moveToStartPos();
+        //shooter1.moveToStartPos();
     //    shooter2.moveToStartPos();
     //    shooter3.moveToStartPos();
         RobotLog.dd(TAG,"reseting transtions");
@@ -432,7 +446,7 @@ public void stopWheel(){
         if (atTargetVel() || force) {
 //            switch (ball) {
 //                case LEFT:
-                    shooter1.startTransition();
+                  // shooter1.startTransition();
 //                    break;
 //                case CENTER:
 //                    shooter2.startTransition();

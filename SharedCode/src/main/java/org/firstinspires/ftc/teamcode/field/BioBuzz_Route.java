@@ -246,7 +246,8 @@ public abstract class BioBuzz_Route extends Route
            ifBlock(this::haveWiffles);{
                //Move to shoot
        }
-            elseIfBlock(() -> flower1Full && tipped() || !flower2Full);{
+            elseIfBlock(() -> flower1Full && tipped() || !flower2Full);
+           {
                 //go to flower 1
            flower1Full = false;
 

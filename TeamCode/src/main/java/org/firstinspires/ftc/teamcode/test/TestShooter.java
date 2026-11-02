@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.test;
 
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.opModes.InitLinearOpMode;
 import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.util.ManagedGamepad;
-
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BallType.*;
 import java.util.List;
 
 @Config
@@ -70,7 +71,7 @@ public class TestShooter extends InitLinearOpMode
         dbd.setTelemetryTransmissionInterval(25);
 
         shooter = new Shooter(hardwareMap);
-        shooter.initShooter();
+        shooter.initShooter("shootP",POLLEN);
 
         shooter.setPIDF(pidf);
 
@@ -127,12 +128,16 @@ public class TestShooter extends InitLinearOpMode
 
             if (step_up && distance < MAX_DIST) {
                 distance += INCREMENT;
-                shooter.spinShooterW(distance);
+                shooter.spinShooterW(distance, POLLEN);
+
+
                 cps = shooter.getCmdSpd();
             }
             if (step_down && distance > MIN_DIST) {
                 distance -= INCREMENT;
-                shooter.spinShooterW(distance);
+                shooter.spinShooterW(distance, NECTAR);
+
+
                 cps = shooter.getCmdSpd();
             }
             if (zeroize)
@@ -142,7 +147,7 @@ public class TestShooter extends InitLinearOpMode
             }
             if (normal){
                 distance = FAV_DIST;
-                shooter.spinShooterW(distance);
+                shooter.spinShooterW(distance, NECTAR);
                 cps = shooter.getCmdSpd();
             }
 

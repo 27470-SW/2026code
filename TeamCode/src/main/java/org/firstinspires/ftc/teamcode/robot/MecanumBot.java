@@ -1,19 +1,23 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
+import static org.firstinspires.ftc.teamcode.robot.Motors.MotorModel.GOBILDA_5202_13_7;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.ARM_NUM_LEVS;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO2;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.EL_SPD;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.EL_SPD_DWN;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDSTARTINGPOS;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO2;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.WR_SENSE;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -31,23 +35,16 @@ public class MecanumBot extends BasicBot
     //public Claw claw = null;
     //Still need this for now for backward compatibility
 
-    // public MotorComponent elev;
 
-    // public MotorComponent elbowMotor = null;
-    //public MotorComponent extenderMotor = null;
-    //public MotorComponent bucketServo = null;
-    //public ServoComponent wristServo = null;
-    //public ServoComponent droneLauncherServo = null;
-    //public MotorComponent sweeperServo1 = null;
-    //public MotorComponent sweeperServo2 = null;
-    //public Intake intake = null;
-public Claw claw =null;
-public ServoIntake servoIntake =null;
+
+//public ServoIntake servoIntake =null;
 public CrAzYintake crAzYIntake =null;
-public Lifter slides=null;
-public MotorComponent arm=null;
-public Shooter shooter =null;
-public MotorComponent park=null;
+public Shooter shooterN =null;
+public Shooter shooterP =null;
+public Hummingbird babyHummingbird=null;
+public Hummingbird hummingBird=null;
+public MotorComponent transitionWheels=null;
+
     public double logIntakeCurSpd = 0.0;
 
     public MecanumBot()
@@ -168,13 +165,16 @@ public MotorComponent park=null;
         //sweeperServo1 = new MotorComponent("sweeper1", hwMap);
         //sweeperServo2 = new MotorComponent("sweeper2", hwMap);
         //intake = new Intake(hwMap);
-        servoIntake = new ServoIntake(hwMap);
+
+       // servoIntake = new ServoIntake(hwMap);
         crAzYIntake = new CrAzYintake(hwMap);
-        claw = new Claw(hwMap, "clawservo");
-        slides = new Lifter( "slide1", "slide2",hwMap);
-        arm = new MotorComponent("arm",hwMap);
-        shooter = new Shooter(hwMap);
-        park = new MotorComponent("park", hwMap);
+        shooterP = new Shooter(hwMap);
+        shooterN = new Shooter(hwMap);
+        babyHummingbird = new Hummingbird(hwMap,"baby1", "baby2", BABYHUMMINGBIRDZERO1, BABYHUMMINGBIRDZERO2);
+        hummingBird = new Hummingbird(hwMap, "bird1", "bird2", HUMMINGBIRDZERO1, HUMMINGBIRDZERO2);
+        transitionWheels = new MotorComponent("shooter1", hwMap);
+
+
         /*redLED1 = hwMap.get(DigitalChannel.class, "red1");
         greenLED1 = hwMap.get(DigitalChannel.class, "green1");
         redLED2 = hwMap.get(DigitalChannel.class, "red2");
@@ -228,26 +228,16 @@ public MotorComponent park=null;
         }
         intake.init();
         */
+
+
         crAzYIntake.init();
-         claw.init();
-        shooter.initShooter();
-         arm.init(RobotConstants.ARM_MOT,1);
-        arm.setDir(RobotConstants.ARM_DIR);
-        park.init(RobotConstants.PARK_MOT, 28);
-        park.setDir(RobotConstants.PARK_DIR);
-        //arm.setMode(STOP_AND_RESET_ENCODER);        //TODO: make not happen when comming back from auton;
-        arm.setLevelOffset(
-                RobotConstants.ARM_LEVS[0],
-                RobotConstants.ARM_LEVS[1],
-                RobotConstants.ARM_LEVS[2],
-                RobotConstants.ARM_LEVS[3],
-                RobotConstants.ARM_LEVS[4],
-                RobotConstants.ARM_LEVS[5],
-                RobotConstants.ARM_LEVS[6]);
+        shooterP.initShooter("shootP", RobotConstants.BallType.POLLEN);
+        shooterN.initShooter("shootN", RobotConstants.BallType.NECTAR);
+        transitionWheels.init(GOBILDA_5202_13_7,1);
+        transitionWheels.setZeroPower(DcMotor.ZeroPowerBehavior.FLOAT);
+        hummingBird.init(0.2);
+        babyHummingbird.init(0);
 
-
-        armLevel =0;
-        slides.init();
       //  slides.setMode(STOP_AND_RESET_ENCODER);        //TODO: make not happen when comming back from auton;
         //elbowMotor.init(RobotConstants.EL_EXT_M, -2);
 
@@ -268,35 +258,30 @@ public MotorComponent park=null;
         updTimer.reset();
        // RobotLog.dd(TAG, "pose(9) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
 
-        if(claw != null)
-        {
-            claw.update();
-        }
-        if(shooter != null)
-        {
-            shooter.update();
-        }
-        //RobotLog.dd(TAG, "pose(10) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
 
-        if(servoIntake != null)
+        if(shooterP != null)
         {
-            servoIntake.update();
+            shooterP.update();
         }
         if(crAzYIntake != null)
         {
             crAzYIntake.update();
         }
-        if(slides != null)
+        if(shooterN != null)
         {
-            slides.update();
+            shooterN.update();
         }
-        if(arm != null)
+        if(babyHummingbird != null)
         {
-            arm.update();
+            babyHummingbird.update();
         }
-        if(park != null)
+        if(hummingBird != null)
         {
-            park.update();
+            hummingBird.update();
+        }
+        if(transitionWheels != null)
+        {
+            transitionWheels.update();
         }
 
         double lftTime = updTimer.milliseconds();
@@ -351,7 +336,7 @@ public MotorComponent park=null;
         }*/
     }
 
-   public void initArmMot() throws InterruptedException {
+  /* public void initArmMot() throws InterruptedException {
 
         arm.moveToCnt(2000,.02);
 
@@ -373,19 +358,24 @@ public MotorComponent park=null;
         claw.setClawPos(1);
         RobotLog.dd(TAG, "claw open init");
     }
+*/
 
     public void initShooter() throws InterruptedException {
-        shooter.initPos();
+       // shooterP.initPos();
+    }
+    public void initHummingBirds(){
+        babyHummingbird.setPosition(0);
+        hummingBird.setPosition(HUMMINGBIRDSTARTINGPOS);
     }
 
-    public void initSlides() throws InterruptedException {
-       slides.initPos();
-    }
+   // public void initSlides() throws InterruptedException {
+   //    slides.initPos();
+   // }
 
 
-    public void setClawPos(double input){
-            claw.setClawPos(input * WR_SENSE );
-    }
+  //  public void setClawPos(double input){
+   //         claw.setClawPos(input * WR_SENSE );
+  //  }
 
 
 
@@ -404,80 +394,20 @@ public MotorComponent park=null;
 
     }
 
-    private enum servoState{
-        STOPPED,
-        FORWARD,
-        BACKWARD
-    }
-
-    public boolean purplePixelDrop = false;
-
-    private servoState bucketServoOn;
-    Timer timer = new Timer();
 
 public  int armLevel;
 public  int slideLevel;
 
 
     //TODO: combine arm and slide together into a single level concept
-    public void armLevelUp(){
-        if(armLevel != ARM_NUM_LEVS - 1){  //change "-2" based on amount of levs needed
-            armLevel ++;
-
-            arm.moveToLevel(armLevel, 1);
-            slides.moveToLevel(armLevel);
-
-        }
-    }
-
-    public void armLevelDown() {
-        if(armLevel != 0){
-            armLevel--;
 
 
-            arm.moveToLevel(armLevel, -1);
-            slides.moveToLevel(armLevel);
-        }
-    }
-
-public void goPark(){
-        park.moveToCnt(2000, 1);
-}
-
-    public void hangPos(){
-        arm.moveToCnt(-900, 1);
-        slides.moveToLevel(7);
-    }
-
-   /* public void specimenPos(){
-        arm.moveToLevel(3, 0.8);
-        slides.moveToLevel(3);
-        armLevel = 3;
-    }
-
-    */
-
-    public void drivePos(){
-        arm.moveToLevel(2, 0.8);
-        slides.moveToLevel(2);
-        armLevel = 2;
-    }
 
 
-    public double getElSpd(int targetEncoder){
-        if(targetEncoder > slides.getLiftPos()){
-            return EL_SPD_DWN;
-        }else {
-            return EL_SPD;
-        }
-    }
 
-    public enum ElbowPositions {
-        SAMPLE_MODE,
-        SPECIMEN_MODE
-    }
 
-public ElbowPositions currentMode=ElbowPositions.SAMPLE_MODE;
+
+
 
 
 

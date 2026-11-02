@@ -64,7 +64,7 @@ public class RobotConstants
   public static double IN_ARM_EXT_STOW = 0.0;
   public static double IN_ARM_EXT_IN = 0.0;
   public static double IN_ARM_EXT_DEPLOY = 0.2;
-  public static DcMotorSimple.Direction IN_DIR = DcMotorSimple.Direction.REVERSE;
+  public static DcMotorSimple.Direction IN_DIR = DcMotorSimple.Direction.FORWARD;
   public static DcMotorSimple.Direction IN2_DIR = DcMotorSimple.Direction.REVERSE;
   public static Motors.MotorModel IN_MOTOR_MOT = Motors.MotorModel.GOBILDA_5202_71_2;
   public static double IN_GEAR = 1.0;
@@ -100,13 +100,25 @@ public class RobotConstants
   public final static int GPP_APRIL_TAG = 21;
   public final static int PGP_APRIL_TAG = 22;
   public final static int PPG_APRIL_TAG = 23;
-  public static  double SHOOTER_VELOCITY = 2050;
-    public static  double SHOOTER_VELOCITY_CLOSE = 1620;
+  public static  double POLLEN_VELOCITY_CLOSE = 900;
+    public static  double NECTAR_VELOCITY_CLOSE = 1200;
+    public static  double SHOOTER_VELOCITY_POLLEN = 950;
+    public static  double SHOOTER_VELOCITY_NECTAR = 1300;
+
   public static int SHOOT_CLOSE_TRAJ = -400;
   public static int SHOOT_FAR_TRAJ = -1250;
     public static double SHOOT_SERVO_FAR = 0.62;
     public static double SHOOT_SERVO_CLOSE = 0.41;
     public static double SHOOT_SERVO_GOAL = 0.25;
+
+    public static double HUMMINGBIRDZERO1 = 0.25;
+    public static double HUMMINGBIRDZERO2 = 0.25;
+    public static double BABYHUMMINGBIRDZERO1 = 0.25;
+    public static double BABYHUMMINGBIRDZERO2 = 0.25;
+
+    public static double HUMMINGBIRDSTARTINGPOS = 0.3;
+
+
     public static double WHEEL_GUARDS_ON = 0.75;
     public static double WHEEL_GUARDS_OFF = 0.25;
   public static double DWV_M1 = 4.66;  //v2 = 4.25
@@ -295,7 +307,7 @@ public class RobotConstants
   public static DcMotorSimple.Direction LD_DIR = DcMotorSimple.Direction.REVERSE;
 
   public static final double MMPERIN = 25.4;
-  public static Motors.MotorModel DT_MOTOR = Motors.MotorModel.GOBILDA_5202_13_7;
+  public static Motors.MotorModel DT_MOTOR = Motors.MotorModel.GOBILDA_5202_19_2;
   public static double DT_CPMR = DT_MOTOR.getCpr(); //counts per motor output shaft rev
   public static double DT_MAX_RPM = DT_MOTOR.getRpm();
   public static double DT_EXT_GEAR_RATIO = 1.0;
@@ -322,10 +334,10 @@ public class RobotConstants
   public static Field.Alliance alliance = Field.Alliance.RED;
   public static PositionOption startPos = Field.Start_Pos.FARMAINLYNEARRED;
 
-  public static DcMotorSimple.Direction DT_FLDIR = DcMotorSimple.Direction.REVERSE;
-  public static DcMotorSimple.Direction DT_BLDIR = DcMotorSimple.Direction.REVERSE;
-  public static DcMotorSimple.Direction DT_FRDIR = DcMotorSimple.Direction.FORWARD;
-  public static DcMotorSimple.Direction DT_BRDIR = DcMotorSimple.Direction.FORWARD;
+  public static DcMotorSimple.Direction DT_FLDIR = DcMotorSimple.Direction.FORWARD;
+  public static DcMotorSimple.Direction DT_BLDIR = DcMotorSimple.Direction.FORWARD;
+  public static DcMotorSimple.Direction DT_FRDIR = DcMotorSimple.Direction.REVERSE;
+  public static DcMotorSimple.Direction DT_BRDIR = DcMotorSimple.Direction.REVERSE;
 
   public static AxesOrder HUB_ORDER = AxesOrder.ZYX;
   public static AxesSigns HUB_SIGNS = AxesSigns.PPP;
@@ -659,6 +671,12 @@ public class RobotConstants
 
 
   }
+public enum BallType
+{
+    NECTAR,
+    POLLEN,
+}
+
 
   public enum TrajEnum{
     INIT_TRAJ_1,

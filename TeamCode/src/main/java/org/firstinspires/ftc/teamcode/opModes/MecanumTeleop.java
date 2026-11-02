@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -99,20 +97,11 @@ public class MecanumTeleop extends InitLinearOpMode
         {
             startPose = new Pose2d(0,0,Math.toRadians(90));
             try {
-                if (robot.slides != null) {
-                    robot.initSlides();
-                }
 
-                if (robot.arm != null) {
-                    robot.initArmMot();
-                }
-                if (robot.park != null){
-                    robot.initParkMot();
-                }
-                if(robot.shooter != null){
-                    robot.shooter.initPos();
-                    robot.shooter.spinShooterW(distanceToTheGoal);
-                    robot.shooter.stopWheel();
+                if(robot.shooterP != null){
+                    robot.shooterP.initPos();
+                    robot.shooterP.spinShooterW(distanceToTheGoal, BallType.POLLEN);
+                    robot.shooterP.stopWheel();
                 }
 
             } catch (Exception e) {
@@ -176,7 +165,7 @@ public class MecanumTeleop extends InitLinearOpMode
 
         clawLev = 0;
         armNslidesLev = 0;
-        robot.claw.Triggr = true;
+
 
     }
 
@@ -231,21 +220,21 @@ public class MecanumTeleop extends InitLinearOpMode
         dashboard.displayText(l++, String.format(Locale.US,"Mrk Pos %.2f MvRate %.2f ",
                 lastMrkPos, moveAtRate));
         if(null != robot) {
-            if (null != robot.shooter) {
-                if(null != robot.shooter.moveShooterM) {
-                    dashboard.displayText(l++, String.format(Locale.US, "Trajectroty motor mode %s", robot.shooter.moveShooterM.getMode().toString()));
-                    dashboard.displayText(l++, String.format(Locale.US, "Trajectroty motor current encoder %d", robot.shooter.moveShooterM.getCurrentPosition()));
+            if (null != robot.shooterP) {
+                if(null != robot.shooterP.moveShooterM) {
+                    dashboard.displayText(l++, String.format(Locale.US, "Trajectroty motor mode %s", robot.shooterP.moveShooterM.getMode().toString()));
+                    dashboard.displayText(l++, String.format(Locale.US, "Trajectroty motor current encoder %d", robot.shooterP.moveShooterM.getCurrentPosition()));
                 }
-                if(null != robot.shooter.moveShooter1)
-                    dashboard.displayText(l++, String.format(Locale.US, "Trajectroty servo position: %f", robot.shooter.moveShooter1.getPosition()));
+                if(null != robot.shooterP.moveShooter1)
+                    dashboard.displayText(l++, String.format(Locale.US, "Trajectroty servo position: %f", robot.shooterP.moveShooter1.getPosition()));
 
-                dashboard.displayText(l++, String.format(Locale.US, "Shooter motor velo %f", robot.shooter.getFilteredVelocity()));
+                dashboard.displayText(l++, String.format(Locale.US, "Shooter motor velo %f", robot.shooterP.getFilteredVelocity()));
             }
         Pose2d currentPose = mechDrv.getRealPoseEstimate();
             dashboard.displayText(l++, String.format(Locale.US, "X: %f, Y: %f, Heading: %f",currentPose.getX(),currentPose.getY(),Math.toDegrees(currentPose.getHeading())));
             dashboard.displayText(l++, String.format(Locale.US, "Localizer, %s", mechDrv.getLocalizer().getClass().getSimpleName()));
             dashboard.displayText(l++, String.format(Locale.US, " Camera Found %b Camera Dist %f", targetFound, distanceToTheGoal));
-            dashboard.displayText(l++, String.format(Locale.US, " intergral sum = %f", robot.shooter.controlShooterW.getIntegralSum()));
+            dashboard.displayText(l++, String.format(Locale.US, " intergral sum = %f", robot.shooterP.controlShooterW.getIntegralSum()));
 
         }
 
@@ -838,10 +827,10 @@ public class MecanumTeleop extends InitLinearOpMode
         if (intakeOn)
         {
             robot.crAzYIntake.setPwr(1);
-            robot.shooter.resetTransition();
-            robot.shooter.setShooterTrajPos(DEFAULT_TRAJ_POSITION);
-            robot.shooter.disengageAutoTraj();
-            robot.shooter.wheelGuardsDown();
+            robot.shooterP.resetTransition();
+            robot.shooterP.setShooterTrajPos(DEFAULT_TRAJ_POSITION);
+            robot.shooterP.disengageAutoTraj();
+            robot.shooterP.wheelGuardsDown();
             RobotLog.dd(TAG,"intakeon");
         }
 
@@ -873,13 +862,13 @@ public class MecanumTeleop extends InitLinearOpMode
 
 
         gpad2.update();
-        boolean dpadUp= gpad2.pressed(ManagedGamepad.Button.D_UP);
+        boolean dpadUp= gpad2.just_pressed(ManagedGamepad.Button.D_UP);
         boolean dpadLeft= gpad2.pressed(ManagedGamepad.Button.D_LEFT);
         boolean dpadRight= gpad2.pressed(ManagedGamepad.Button.D_RIGHT);
-        boolean dpadDown= gpad2.pressed(ManagedGamepad.Button.D_DOWN);
+        boolean dpadDown= gpad2.just_pressed(ManagedGamepad.Button.D_DOWN);
         double rightTrig = gpad2.value(ManagedGamepad.AnalogInput.R_TRIGGER_VAL);
         double leftJoyY = gpad2.value(ManagedGamepad.AnalogInput.L_STICK_Y);
-        boolean engageAutoTraj = gpad2.just_pressed(ManagedGamepad.Button.B) && !gpad2.pressed(ManagedGamepad.Button.START);
+        //boolean engageAutoTraj = gpad2.just_pressed(ManagedGamepad.Button.B) && !gpad2.pressed(ManagedGamepad.Button.START);
         double leftTrig = gpad2.value(ManagedGamepad.AnalogInput.L_TRIGGER_VAL);
         boolean xDown = gpad2.just_pressed(ManagedGamepad.Button.X);
         boolean yUp = gpad2.just_pressed(ManagedGamepad.Button.Y);
@@ -888,14 +877,16 @@ public class MecanumTeleop extends InitLinearOpMode
         boolean rightJoyPressed = gpad2.just_pressed(ManagedGamepad.Button.R_STICK_BUTTON);
         double rightJoyY = gpad2.value(ManagedGamepad.AnalogInput.R_STICK_Y);
         boolean overRideShoot = gpad1.just_pressed(ManagedGamepad.Button.D_UP);
+        boolean aDown = gpad2.pressed(ManagedGamepad.Button.A) && !gpad2.pressed(ManagedGamepad.Button.START);
+        boolean bDown = gpad2.pressed(ManagedGamepad.Button.B) && !gpad2.pressed(ManagedGamepad.Button.START);
 
         if (ResetTrajEnc){
-            if(robot.shooter.moveShooterM != null) robot.shooter.moveShooterM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            if(robot.shooterP.moveShooterM != null) robot.shooterP.moveShooterM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
-        if (engageAutoTraj){
-            autoTrajEngaged = true;
-            robot.shooter.onAutoTraj();
-        }
+       // if (engageAutoTraj){
+           // autoTrajEngaged = true;
+            //robot.shooterP.onAutoTraj();
+        //}
 
 //        if (rightJoyPressed){
 //            robot.goPark();
@@ -907,19 +898,36 @@ public class MecanumTeleop extends InitLinearOpMode
 //            robot.park.moveAtControlRate(0);
 //        }
 
-        if(xDown && dpadLeft) { robot.shooter.shooter1.moveTransitionLittle(-.01);
+        /*if(xDown && dpadLeft) { robot.shooterP.shooter1.moveTransitionLittle(-.01);
             RobotLog.dd(TAG, "moving transition 1 down");
         }
 //        if(xDown && dpadUp) { robot.shooter.shooter2.moveTransitionLittle(-.01);
 //            RobotLog.dd(TAG, "moving transition 2 down");}
 //        if(xDown && dpadRight) { robot.shooter.shooter3.moveTransitionLittle(-.01);
 //            RobotLog.dd(TAG, "moving transition 3 down");}
-        if(yUp && dpadLeft) { robot.shooter.shooter1.moveTransitionLittle(.01);
+        if(yUp && dpadLeft) { robot.shooterP.shooter1.moveTransitionLittle(.01);
             RobotLog.dd(TAG, "moving transition 1 up");}
 //        if(yUp && dpadUp) { robot.shooter.shooter2.moveTransitionLittle(.01);
 //            RobotLog.dd(TAG, "moving transition 2 up"); }
 //        if(yUp && dpadRight) { robot.shooter.shooter3.moveTransitionLittle(.01);
 //            RobotLog.dd(TAG, "moving transition 3 up");}
+
+         */
+        if(aDown && dpadDown){ robot.hummingBird.moveHummingbirdLittle(-.01);
+            RobotLog.dd(TAG, "moving hummingbird down");
+        }
+        if(aDown && dpadUp){robot.hummingBird.moveHummingbirdLittle(.01);
+            RobotLog.dd(TAG, "moving hummingbird up");
+        }
+        if(dpadUp && !aDown){
+            robot.hummingBird.setPosition(0.2);
+            robot.babyHummingbird.setPosition(0.3);
+        }
+        else if(dpadDown && !aDown){
+            robot.hummingBird.setPosition(0);
+            robot.babyHummingbird.setPosition(0);
+        }
+
           if(leftTrig >= 0.3) {
               if(autoTrajEngaged) {
                   distanceToTheGoal = calcDistanceToGoal();
@@ -928,47 +936,50 @@ public class MecanumTeleop extends InitLinearOpMode
 
               if(xDown){
                   autoTrajEngaged = false;
-                  robot.shooter.disengageAutoTraj();
+                  robot.shooterP.disengageAutoTraj();
+                  robot.shooterN.disengageAutoTraj();
                   driveFar = true;
-                  robot.shooter.defaultFarShooterTraj();
+                  robot.shooterP.defaultFarShooterTraj();
+                  robot.shooterN.defaultFarShooterTraj();
                   distanceToTheGoal = MAX_SHOOTER_DIST;
-
                   RobotLog.dd(TAG, "Shooting Far");
               }
               if(yUp){
                   autoTrajEngaged = false;
-                  robot.shooter.disengageAutoTraj();
+                  robot.shooterP.disengageAutoTraj();
                   driveClose = true;
-                  robot.shooter.defaultCloseShooterTraj();
+                  robot.shooterP.defaultCloseShooterTraj();
                   distanceToTheGoal = CLOSE_SHOOTER_DIST;
 
                   RobotLog.dd(TAG, "Shooting Close");
               }
-              robot.shooter.spinShooterW(distanceToTheGoal);
-
+              robot.shooterP.spinShooterW(distanceToTheGoal, BallType.POLLEN);
+              robot.shooterN.spinShooterW(distanceToTheGoal, BallType.NECTAR);
           }else {
-              robot.shooter.stopWheel();
+              robot.shooterP.stopWheel();
+              robot.shooterN.stopWheel();
           }
 
-//        if (dpadDown ||dpadUp||dpadRight||dpadLeft){
-//            RobotLog.dd(TAG,"Dpad pressed");
 
-//            if(dpadDown){
-//                robot.shooter.setBallCount(3);
-//            }
-//            else {
-//                robot.shooter.setBallCount(1);
-//            }
 
 
             if(rightTrig >= 0.3){
-//                if(dpadDown || dpadRight) robot.shooter.shoot(RIGHT,overRideShoot);
-//                if(dpadDown || dpadLeft) robot.shooter.shoot(LEFT,overRideShoot);
-//                if(dpadDown || dpadUp)
-                    robot.shooter.shoot(CENTER,overRideShoot);
+                if(dpadRight) robot.shooterP.shoot(RIGHT,overRideShoot);
+                else if(dpadLeft) robot.shooterN.shoot(LEFT,overRideShoot);
+                else{
+                    robot.shooterN.shoot(CENTER,overRideShoot);
+                     robot.shooterP.shoot(CENTER,overRideShoot);
+                }
+//
+                robot.transitionWheels.moveAtRate(1);
 
-                RobotLog.dd(TAG,"Dpad + trigger pressed");
+                RobotLog.dd(TAG,"trigger pressed");
 
+            } else if (bDown) {
+                robot.transitionWheels.moveAtRate(-1);
+
+            } else{
+                robot.transitionWheels.moveAtRate(0);
             }
 
 //        }
@@ -982,22 +993,22 @@ public class MecanumTeleop extends InitLinearOpMode
 //        }
 
 
-        if (abs(leftJoyY) >= 0.2){
+      /*  if (abs(leftJoyY) >= 0.2){
             autoTrajEngaged = false;
-            robot.shooter.changeShootTraj(leftJoyY, trajLimitBreaker);
+            robot.shooterP.changeShootTraj(leftJoyY, trajLimitBreaker);
             stopTrajM = true;
             RobotLog.dd(TAG,"Shooter Traj Y changed up or down");
 
 
         }
         else if(stopTrajM){
-            robot.shooter.changeShootTraj(0, false);
+            robot.shooterP.changeShootTraj(0, false);
             stopTrajM = false;
            // RobotLog.dd(TAG,"ShooterTraj Y is not being moved currently");
 
         }
 
-
+*/
 
     }
 

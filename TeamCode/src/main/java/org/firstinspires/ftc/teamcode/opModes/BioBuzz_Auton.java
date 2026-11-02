@@ -413,11 +413,16 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
 
         robot.init(this, chas, true);
         try {
-            if (robot.shooter != null) {
+            if (robot.shooterP != null) {
                 robot.initShooter();
             }
         }catch(Exception e) {
             RobotLog.ee(TAG, "Unable to initialize Shooter");
+        }
+        try {
+            robot.initHummingBirds();
+        } catch(Exception e) {
+            RobotLog.ee(TAG, "Unable to initialize Hummingbirds");
         }
         try {
             initAprilTag();
@@ -425,6 +430,7 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
         {
             RobotLog.ee(TAG, "Unable to initialize April Tag Camera");
         }
+
 
         RobotConstants.info();
 

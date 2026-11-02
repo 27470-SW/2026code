@@ -60,13 +60,21 @@ public class MotorComponent
     try
     {
       motor = hwMap.get(DcMotorEx.class, name);
+      RobotLog.dd(TAG, "MotorComponent found %s %s", name, mtrModel);
       motor.setDirection(DcMotorSimple.Direction.FORWARD);
+      RobotLog.dd(TAG, "set direction for %s %s", name, mtrModel);
       motor.setPower(0);
-      ((DcMotorEx) motor).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-      //((DcMotorEx)motor).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-      setMode(RUN_WITHOUT_ENCODER);
+      RobotLog.dd(TAG, "set power for %s %s", name, mtrModel);
 
-      mode = RUN_WITHOUT_ENCODER;
+        ((DcMotorEx) motor).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RobotLog.dd(TAG, "set zero power behavior for  %s %s", name, mtrModel);
+
+        //((DcMotorEx)motor).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      setMode(RUN_WITHOUT_ENCODER);
+        RobotLog.dd(TAG, "set mode for %s %s", name, mtrModel);
+
+
+        mode = RUN_WITHOUT_ENCODER;
       prevMode = mode;
       RobotLog.dd(TAG, "model:%s cpi:%.2f maxcps:%.2f maxSpd:%.2f el_spd:%.2f",
                   model, cpi, maxCps, maxSpd, RobotConstants.EL_SPD);
@@ -134,6 +142,16 @@ public class MotorComponent
     init_common();
 
     return success;
+  }
+
+  public void setZeroPower(DcMotor.ZeroPowerBehavior value){
+      try{
+        ((DcMotorEx) motor).setZeroPowerBehavior(value);
+        }
+      catch (Exception e)
+     {
+        RobotLog.ee(TAG, "ERROR in setZeroPower");
+     }
   }
 
   int testState = 0;

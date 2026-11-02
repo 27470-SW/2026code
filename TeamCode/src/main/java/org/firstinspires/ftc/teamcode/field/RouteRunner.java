@@ -186,11 +186,7 @@ public class RouteRunner extends BioBuzz_Route
 
      public void openclaw (){
 
-         if(robot.claw != null)
-         {
-             robot.claw.openClaw(1);
 
-         }
 
 
      }
@@ -212,8 +208,7 @@ public class RouteRunner extends BioBuzz_Route
 //     }
 //
 public void slidesUpOne(){
-    RobotLog.dd(TAG, "set slides pos to 4");
-    robot.slides.moveToLevel(4);
+
 }
 
 
@@ -225,26 +220,20 @@ public void moveToPosition4(){
 
 
     public void moveArmToBack(){
-        RobotLog.dd(TAG, "moveArmToBack");
-        robot.arm.moveToLevel(6, 1);
-        robot.slides.moveToLevel(3);
     }
 
      protected void moveArmForward(){
-         RobotLog.dd(TAG, "MOVE ARM FORWARD");
-         robot.arm.moveToLevel(0,1);
+
 
      }
 
      protected void moveArmBackward(){
-         RobotLog.dd(TAG, "MOVE Arm Back");
-         robot.arm.moveToLevel(2,1);
+
 
      }
 
     public void armUpLittle(){
-        RobotLog.dd(TAG, "Arm up pos little");
-        robot.arm.moveToLevel(4, 1);
+
 
     }
 
@@ -300,14 +289,14 @@ public void moveToPosition4(){
     @Override
     protected void shootFar(){
         shootingFar = true;
-        robot.shooter.defaultFarShooterTraj();
-        robot.shooter.controlShooterW.setWheelVelocity(1500);
+        robot.shooterP.defaultFarShooterTraj();
+        robot.shooterP.controlShooterW.setWheelVelocity(1500);
          RobotLog.dd(TAG, "Turn on wheel");
     }
     protected void shootFar3(){
         shootingFar = true;
-        robot.shooter.defaultFarShooterTraj();
-        robot.shooter.controlShooterW.setWheelVelocity(1750);
+        robot.shooterP.defaultFarShooterTraj();
+        robot.shooterP.controlShooterW.setWheelVelocity(1750);
         RobotLog.dd(TAG, "Turn on wheel");
     }
     Pose2d goalLocation;
@@ -321,18 +310,20 @@ public void moveToPosition4(){
     }
     protected void autoTrajShooter_wheel(){
         distanceToTheGoal = calcDistanceToGoal();
-        robot.shooter.spinShooterW(distanceToTheGoal);
-        robot.shooter.onAutoTraj();
+        robot.shooterP.spinShooterW(distanceToTheGoal, BallType.POLLEN);
+        robot.shooterP.onAutoTraj();
+        robot.shooterN.spinShooterW(distanceToTheGoal, BallType.NECTAR);
+        robot.shooterN.onAutoTraj();
 
     }
     @Override
     protected void wheelOff(){
-        robot.shooter.stopWheel();
+        robot.shooterP.stopWheel();
     }
      @Override
      protected void shootWiffleClose(){
-         robot.shooter.autonShootClose();
-         robot.shooter.controlShooterW.setWheelVelocity(1225);
+         robot.shooterP.autonShootClose();
+         robot.shooterP.controlShooterW.setWheelVelocity(1225);
          RobotLog.dd(TAG, "Shoot Balls Close");
      }
 
@@ -348,11 +339,11 @@ public void moveToPosition4(){
      @Override
      protected void intakeonandthreeTransitionsDown(){
          robot.crAzYIntake.setPwr(1);
-         robot.shooter.resetTransition();
-         robot.shooter.setShooterTrajPos(DEFAULT_TRAJ_POSITION);
+         robot.shooterP.resetTransition();
+         robot.shooterP.setShooterTrajPos(DEFAULT_TRAJ_POSITION);
     }
      protected void resetTrajAng(){
-        robot.shooter.setShooterTrajPos(MIN_TRAJ_ENCODER);
+        robot.shooterP.setShooterTrajPos(MIN_TRAJ_ENCODER);
      }
      @Override
      protected void intakeOn(){
@@ -365,7 +356,7 @@ public void moveToPosition4(){
         RobotLog.dd(TAG, "Intake Off");
      }
      protected void wheel1350(){
-         robot.shooter.controlShooterW.setWheelVelocity(1350);
+         robot.shooterP.controlShooterW.setWheelVelocity(1350);
      }
      protected void doPark()
      {
@@ -374,16 +365,16 @@ public void moveToPosition4(){
     @Override
     protected void shoot1(){
 
-        robot.shooter.shoot(RIGHT,true);
+        robot.shooterP.shoot(RIGHT,true);
 
         RobotLog.dd(TAG, "Shoot Transition 1");}
     @Override
     protected void shoot2(){
-        robot.shooter.shoot(CENTER,true);
+        robot.shooterP.shoot(CENTER,true);
         RobotLog.dd(TAG, "Shoot Transition 2");}
     @Override
     protected void shoot3(){
-        robot.shooter.shoot(LEFT,true);
+        robot.shooterP.shoot(LEFT,true);
         RobotLog.dd(TAG, "Shoot Transition 3");}
 
 
@@ -506,10 +497,10 @@ public void moveToPosition4(){
     }
 
      public void armDrivePos(){
-        robot.arm.moveToLevel(1,1);
+        //robot.arm.moveToLevel(1,1);
      }
      public void armDropSpikePos(){
-         robot.arm.moveToCnt(-800,1);
+        // robot.arm.moveToCnt(-800,1);
 
 }
     public void outFrontPixel(){
@@ -518,8 +509,8 @@ public void moveToPosition4(){
 
  public void moveToDrive(){
         RobotLog.dd(TAG, "in moveToDrive\n");
-     robot.arm.moveToLevel(2, 1);
-     robot.slides.setLiftPos(RobotConstants.EL_MIN_ENCODER);
+     //robot.arm.moveToLevel(2, 1);
+     //robot.slides.setLiftPos(RobotConstants.EL_MIN_ENCODER);
      }
 
 
@@ -533,8 +524,8 @@ public void moveToPosition4(){
         mTimerArm = new Timer();
         mTtArm = new TimerTask() {
             public void run() {
-                robot.arm.moveToLevel(0, 1);
-                robot.slides.moveToLevel(0);
+                //robot.arm.moveToLevel(0, 1);
+               // robot.slides.moveToLevel(0);
             }
         };
         mTimerArm.schedule(mTtArm, 1000);
@@ -542,35 +533,35 @@ public void moveToPosition4(){
 
     public void moveArmToZero(){
         RobotLog.dd(TAG, "in moveArmToZero\n");
-        robot.arm.moveToCnt(0,1);
+        //robot.arm.moveToCnt(0,1);
     }
 
     public void moveArmToPickup(){
         RobotLog.dd(TAG, "in moveArmToPickup\n");
-        robot.arm.moveToLevel(0, 1);
-        robot.slides.moveToLevel(0);
+      //  robot.arm.moveToLevel(0, 1);
+       // robot.slides.moveToLevel(0);
     }
 
     public void moveSlidesToPickup(){
         RobotLog.dd(TAG, "in moveArmToPickup\n");
-        robot.slides.setLiftPos(RobotConstants.EL_MIN_ENCODER);
+      //  robot.slides.setLiftPos(RobotConstants.EL_MIN_ENCODER);
     }
 
     public void moveArmTo90(){
         RobotLog.dd(TAG, "in moveArmTo90\n");
-        robot.arm.moveToLevel(2, 1);
+       // robot.arm.moveToLevel(2, 1);
     }
     public void maxSlides(){
         RobotLog.dd(TAG, "in maxSlides\n");
-        robot.slides.setLiftPos(RobotConstants.EL_LEV5);
+       // robot.slides.setLiftPos(RobotConstants.EL_LEV5);
     }
     public void moveArmToDrop(){
         RobotLog.dd(TAG, "in moveArmToDrop\n");
-        robot.arm.moveToLevel(5, 1);
+       // robot.arm.moveToLevel(5, 1);
     }
     public void minSlides(){
         RobotLog.dd(TAG,  "in minSlides\n");
-        robot.slides.setLiftPos(RobotConstants.EL_MIN_ENCODER);
+       // robot.slides.setLiftPos(RobotConstants.EL_MIN_ENCODER);
     }
 
 
@@ -592,10 +583,7 @@ public void moveToPosition4(){
          if(VERBOSE) { RobotLog.dd(TAG, "in outPixel");}
 
      }
-    public void outPurplePixel(){
-        robot.purplePixelDrop = true;
 
-    }
 
     public void intakes(){
 
