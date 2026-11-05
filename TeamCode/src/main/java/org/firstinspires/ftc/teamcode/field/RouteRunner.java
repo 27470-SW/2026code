@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.opModes.BioBuzz_Auton;
 import org.firstinspires.ftc.teamcode.robot.MecanumBot;
-import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.util.CommonUtil;
 import org.firstinspires.ftc.teamcode.util.HalDashboard;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -365,7 +364,7 @@ public void moveToPosition4(){
     @Override
     protected void shoot1(){
 
-        robot.shooterP.shoot(RIGHT,true);
+        robot.shooterP.shoot(NECTAR,true);
 
         RobotLog.dd(TAG, "Shoot Transition 1");}
     @Override
@@ -374,7 +373,7 @@ public void moveToPosition4(){
         RobotLog.dd(TAG, "Shoot Transition 2");}
     @Override
     protected void shoot3(){
-        robot.shooterP.shoot(LEFT,true);
+        robot.shooterP.shoot(POLLEN,true);
         RobotLog.dd(TAG, "Shoot Transition 3");}
 
 

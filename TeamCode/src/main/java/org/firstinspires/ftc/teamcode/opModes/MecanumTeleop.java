@@ -819,33 +819,7 @@ public class MecanumTeleop extends InitLinearOpMode
 
     private boolean lBumperPressed;
 
-    private void processIntakeInputs()
-    {
-        boolean intakeRev = gpad1.pressed(ManagedGamepad.Button.R_BUMP) || gpad2.pressed(ManagedGamepad.Button.R_BUMP);
-        boolean intakeOn = gpad1.pressed(ManagedGamepad.Button.L_BUMP) || gpad2.pressed(ManagedGamepad.Button.L_BUMP);
 
-        if (intakeOn)
-        {
-            robot.crAzYIntake.setPwr(1);
-            robot.shooterP.resetTransition();
-            robot.shooterP.setShooterTrajPos(DEFAULT_TRAJ_POSITION);
-            robot.shooterP.disengageAutoTraj();
-            robot.shooterP.wheelGuardsDown();
-            RobotLog.dd(TAG,"intakeon");
-        }
-
-        else if (intakeRev)
-        {
-            robot.crAzYIntake.setPwr(-1);
-            RobotLog.dd(TAG,"intakereverse");
-
-        }
-        else {
-            robot.crAzYIntake.setPwr(0);
-            RobotLog.dd(TAG,"intake power 0");
-        }
-
-    }
 
     private double calcDistanceToGoal(){
         double x = goalLocation.getX() - robot.getPoseEstimate().getX();
@@ -856,8 +830,8 @@ public class MecanumTeleop extends InitLinearOpMode
 
     boolean stopTrajM = false;
     boolean autoTrajEngaged = false;
-
-    private void processControllerInputs()
+    double intakeOffTime = BACKWARD_TRANSITION_TIME;
+    private void processOperatorInputs()
     {
 
 
@@ -879,7 +853,63 @@ public class MecanumTeleop extends InitLinearOpMode
         boolean overRideShoot = gpad1.just_pressed(ManagedGamepad.Button.D_UP);
         boolean aDown = gpad2.pressed(ManagedGamepad.Button.A) && !gpad2.pressed(ManagedGamepad.Button.START);
         boolean bDown = gpad2.pressed(ManagedGamepad.Button.B) && !gpad2.pressed(ManagedGamepad.Button.START);
+        //intake for both controllers
+        boolean intakeRev = gpad1.pressed(ManagedGamepad.Button.R_BUMP) || gpad2.pressed(ManagedGamepad.Button.R_BUMP);
+        boolean intakeOn = gpad1.pressed(ManagedGamepad.Button.L_BUMP) || gpad2.pressed(ManagedGamepad.Button.L_BUMP);
 
+
+        if (intakeRev)
+        {
+            robot.crAzYIntake.setPwr(-1);
+            RobotLog.dd(TAG,"intakereverse");
+            robot.transitionWheels.moveAtRate(-1);
+        }
+        else if (intakeOn)
+        {
+            robot.crAzYIntake.setPwr(1);
+            robot.shooterP.resetTransition();
+            robot.shooterP.setShooterTrajPos(DEFAULT_TRAJ_POSITION);
+            robot.shooterP.disengageAutoTraj();
+            robot.shooterP.wheelGuardsDown();
+            RobotLog.dd(TAG,"intakeon");
+            robot.transitionWheels.moveAtRate(1);
+            intakeOffTime = opTimer.milliseconds();
+        }
+        else {
+            robot.crAzYIntake.setPwr(0);
+            RobotLog.dd(TAG,"intake power 0");
+
+            if(rightTrig >= 0.3) {
+                if (dpadRight) robot.shooterP.shoot(POLLEN, overRideShoot);
+
+                else if (dpadLeft) robot.shooterN.shoot(NECTAR, overRideShoot);
+                else {
+                    robot.shooterN.shoot(NECTAR, overRideShoot);
+                    robot.shooterP.shoot(POLLEN, overRideShoot);
+                    RobotLog.dd(TAG, "shooting both pollen and nectar");
+
+                }
+//
+                robot.transitionWheels.moveAtRate(1);
+
+                RobotLog.dd(TAG, "trigger pressed");
+            }
+            else if(opTimer.milliseconds() <= intakeOffTime + BACKWARD_TRANSITION_TIME) {
+                robot.transitionWheels.moveAtRate(-1);
+            }
+            else if (bDown) {
+                robot.transitionWheels.moveAtRate(-1);
+            } else{
+                robot.transitionWheels.moveAtRate(0);
+            }
+
+            if(rightTrig < 0.3)
+            {
+                robot.shooterN.stop();
+                robot.shooterP.stop ();
+            }
+
+        }
         if (ResetTrajEnc){
             if(robot.shooterP.moveShooterM != null) robot.shooterP.moveShooterM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
@@ -914,14 +944,16 @@ public class MecanumTeleop extends InitLinearOpMode
 
          */
         if(aDown && dpadDown){ robot.hummingBird.moveHummingbirdLittle(-.01);
+            robot.babyHummingbird.moveHummingbirdLittle(-.01);
             RobotLog.dd(TAG, "moving hummingbird down");
         }
         if(aDown && dpadUp){robot.hummingBird.moveHummingbirdLittle(.01);
+            robot.babyHummingbird.moveHummingbirdLittle(.01);
             RobotLog.dd(TAG, "moving hummingbird up");
         }
         if(dpadUp && !aDown){
             robot.hummingBird.setPosition(0.2);
-            robot.babyHummingbird.setPosition(0.3);
+            robot.babyHummingbird.setPosition(1);
         }
         else if(dpadDown && !aDown){
             robot.hummingBird.setPosition(0);
@@ -963,24 +995,7 @@ public class MecanumTeleop extends InitLinearOpMode
 
 
 
-            if(rightTrig >= 0.3){
-                if(dpadRight) robot.shooterP.shoot(RIGHT,overRideShoot);
-                else if(dpadLeft) robot.shooterN.shoot(LEFT,overRideShoot);
-                else{
-                    robot.shooterN.shoot(CENTER,overRideShoot);
-                     robot.shooterP.shoot(CENTER,overRideShoot);
-                }
-//
-                robot.transitionWheels.moveAtRate(1);
 
-                RobotLog.dd(TAG,"trigger pressed");
-
-            } else if (bDown) {
-                robot.transitionWheels.moveAtRate(-1);
-
-            } else{
-                robot.transitionWheels.moveAtRate(0);
-            }
 
 //        }
 //        else {
@@ -1060,14 +1075,13 @@ public class MecanumTeleop extends InitLinearOpMode
             update();
             u=opTimer.milliseconds();
 //            oTimer.reset();
-            processControllerInputs();
+            processOperatorInputs();
             c=opTimer.milliseconds();
             processSensors();
 //            oTimer.reset();
             processDriverInputs();
             d=opTimer.milliseconds();
             processSensors();
-            processIntakeInputs();
 //            oTimer.reset();
             printTelem();
 //            p=opTimer.milliseconds();

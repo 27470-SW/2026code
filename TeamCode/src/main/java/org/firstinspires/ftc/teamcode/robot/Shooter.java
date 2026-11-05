@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -111,8 +110,24 @@ public class Shooter
 
 
         vs = hwMap.get(VoltageSensor.class, "Control Hub");
-        shooter1 = new Transition("shooter1T", hwMap);
-    //    shooter2 = new Transition("shooter2", hwMap);
+
+        try{
+
+
+
+        if (ball == BallType.NECTAR) shooter1 = hwMap.get(Servo.class,"nectar");
+        else shooter1 = hwMap.get(Servo.class, "pollen");
+            RobotLog.dd(TAG, "shoter servo initialized" );
+        }
+        catch (Exception e)
+        {
+            RobotLog.ee(TAG, "error unable to get shoter servo" + e.toString());
+
+        }
+
+
+
+        //    shooter2 = new Transition("shooter2", hwMap);
     //    shooter3 = new Transition("shooter3", hwMap);
     //    if(shooter1 != null) shooter1.init(TRANSITION_RESTPOINT1, false);
     //    if(shooter2 != null) shooter2.init(TRANSITION_RESTPOINT2, true);
@@ -161,7 +176,7 @@ public class Shooter
             if(moveShooterM !=null) setShooterTrajPos(getTrajEncoderDist());
             if(moveShooter1 != null) setShooterTrajPos(getTrajServoVal());
         }
-        if(shooter1 != null) shooter1.update();
+        //if(shooter1 != null) shooter1.update();
         if(shooter2 != null) shooter2.update();
         if(shooter3 != null) shooter3.update();
 
@@ -210,16 +225,16 @@ public class Shooter
 
     public void stop()
     {
-        cps = 0.0;
-        if(shooterW != null) shooterW.setVelocity(cps);
-        if(shooterW2 != null) shooterW2.setVelocity(cps);
+        //cps = 0.0;
+        //if(shooterW != null) shooterW.setVelocity(cps);
+        //if(shooterW2 != null) shooterW2.setVelocity(cps);
 
-        if(moveShooter1 != null) moveShooter1.setPosition(moveShooter1.getPosition());
-        if(moveShooter2 != null) moveShooter2.setPosition(moveShooter2.getPosition());
-        if(moveShooterM != null) moveShooterM.setVelocity(cps);
-        shooter1.stop();
-        shooter2.stop();
-        shooter3.stop();
+        //if(moveShooter1 != null) moveShooter1.setPosition(moveShooter1.getPosition());
+        //if(moveShooter2 != null) moveShooter2.setPosition(moveShooter2.getPosition());
+        //if(moveShooterM != null) moveShooterM.setVelocity(cps);
+        shooter1.setPosition(0.5);
+        //shooter2.stop();
+        //shooter3.stop();
     }
 public void stopWheel(){
         cps = 0.0;
@@ -442,11 +457,14 @@ public void stopWheel(){
 
     public void shoot(BALL_CHOICE ball, boolean force){
         wheelGuardsUp();
-        RobotLog.dd(TAG, "trying to shoot, ");
+        RobotLog.dd(TAG, "trying to shoot, " + ball.toString());
         if (atTargetVel() || force) {
 //            switch (ball) {
 //                case LEFT:
-                  // shooter1.startTransition();
+            if (ball == BALL_CHOICE.NECTAR )
+                   shooter1.setPosition(1);
+            else
+                   shooter1.setPosition(0);
 //                    break;
 //                case CENTER:
 //                    shooter2.startTransition();
@@ -497,7 +515,7 @@ public void stopWheel(){
     private VoltageSensor vs;
     public Servo moveShooter1 = null;
     public Servo moveShooter2 = null;
-    public Transition shooter1 = null;
+    public Servo shooter1 = null;
     public Transition shooter2 = null;
     public Transition shooter3 = null;
     private static final String TAG = "SJH_SHT";
@@ -513,8 +531,8 @@ public void stopWheel(){
     private Telemetry dashTelemetry;
     private FtcDashboard dashboardShooter;
     public enum BALL_CHOICE {
-        RIGHT,
-        LEFT,
+        NECTAR,
+        POLLEN,
         CENTER
     }
 

@@ -104,7 +104,7 @@ public class RobotConstants
     public static  double NECTAR_VELOCITY_CLOSE = 1200;
     public static  double SHOOTER_VELOCITY_POLLEN = 950;
     public static  double SHOOTER_VELOCITY_NECTAR = 1300;
-
+    public static  double BACKWARD_TRANSITION_TIME = 100;
   public static int SHOOT_CLOSE_TRAJ = -400;
   public static int SHOOT_FAR_TRAJ = -1250;
     public static double SHOOT_SERVO_FAR = 0.62;

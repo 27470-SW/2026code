@@ -2,29 +2,21 @@ package org.firstinspires.ftc.teamcode.test;
 
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
 import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.CENTER;
-import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.LEFT;
-import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.RIGHT;
+import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.POLLEN;
+import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.NECTAR;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.opModes.InitLinearOpMode;
-import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Transition;
 import org.firstinspires.ftc.teamcode.util.ManagedGamepad;
 import org.firstinspires.ftc.teamcode.util.PIDControl;
-
-import java.util.List;
 
 @Config
 @TeleOp(name = "TestPidShooter", group = "Test")
@@ -113,8 +105,8 @@ public class TestPIDshooter extends InitLinearOpMode
 
 
                 if(rightTrig >= 0.3){
-                    if(dpadDown || dpadRight) shoot(RIGHT);
-                    if(dpadLeft) shoot(LEFT);
+                    if(dpadDown || dpadRight) shoot(NECTAR);
+                    if(dpadLeft) shoot(POLLEN);
                     if(dpadDown || dpadUp) shoot(CENTER);
 
                     RobotLog.dd("TEST PID SHOOTER","Dpad + trigger pressed");
@@ -153,13 +145,13 @@ public class TestPIDshooter extends InitLinearOpMode
 
     public void shoot(Shooter.BALL_CHOICE ball){
         switch (ball){
-            case LEFT:
+            case POLLEN:
                 if(null!=shooter1)shooter1.startTransition();
                 break;
             case CENTER:
                 if(null!=shooter2)shooter2.startTransition();
                 break;
-            case RIGHT:
+            case NECTAR:
                 if(null!=shooter3)shooter3.startTransition();
                 break;
         }

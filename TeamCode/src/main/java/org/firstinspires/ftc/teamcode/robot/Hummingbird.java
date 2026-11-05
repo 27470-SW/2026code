@@ -9,6 +9,8 @@ public class Hummingbird {
 
     public Hummingbird(HardwareMap map, String servoH1Name, String servoH2Name, double servoH1_0, double servoH2_0)
     {
+        servo1Name = servoH1Name;
+        servo2Name = servoH2Name;
         this.hwMap = map;
         try {
             servoH1 = hwMap.get(Servo.class, servoH1Name);
@@ -34,11 +36,11 @@ public class Hummingbird {
 
         if(servoH1 == null) return;
         servoH1.setPosition(getRealZero(pos, servoH1Zero));
-        RobotLog.dd(TAG, "Percent:%f POS:%f", percent, pos);
+        RobotLog.dd(TAG, "%s Percent:%f POS:%f", servo1Name, percent, pos);
         pos = 1-pos;
         if(servoH2 == null) return;
         servoH2.setPosition(getRealZero(pos, servoH2Zero));
-        RobotLog.dd(TAG, "Percent:%f POS:%f", percent, pos);
+        RobotLog.dd(TAG, "%s Percent:%f POS:%f", servo2Name, percent, pos);
 
     }
     public void moveHummingbirdLittle(double amount){
@@ -57,7 +59,7 @@ public class Hummingbird {
 
 
     public void update(){
-
+       // setPosition(percent);
         //setIntakePower(percent);
 
     }
@@ -77,4 +79,6 @@ public class Hummingbird {
     public double offIntake;
     public boolean Triggr;
     public int K1R2;
+    public String servo1Name;
+    public String servo2Name;
 }
