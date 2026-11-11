@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.opModes.InitLinearOpMode;
 import org.firstinspires.ftc.teamcode.robot.MecanumDriveLRR;
+import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 
 /**
  * Base class for the Road Runner 0.x tuning OpModes.
@@ -58,6 +59,42 @@ public abstract class RRTuningOpMode extends InitLinearOpMode
         drive = new MecanumDriveLRR(imu);
         drive.setPoseEstimate(new Pose2d());
         return drive;
+    }
+
+    private double[] savedGains = null;
+
+    /**
+     * Turn the follower's feedback (TRANSLATIONAL_PID and HEADING_PID) off or back on.
+     * The follower holds references to these objects, so zeroing their fields disables feedback
+     * immediately. Always re-enable in a finally block: the values are static and would otherwise
+     * stay zero for every OpMode until the app restarts.
+     */
+    protected void setFeedbackEnabled(boolean enabled)
+    {
+        if (!enabled && savedGains == null)
+        {
+            savedGains = new double[] {
+                    RobotConstants.TRANSLATIONAL_PID.kP, RobotConstants.TRANSLATIONAL_PID.kI,
+                    RobotConstants.TRANSLATIONAL_PID.kD,
+                    RobotConstants.HEADING_PID.kP, RobotConstants.HEADING_PID.kI,
+                    RobotConstants.HEADING_PID.kD };
+            RobotConstants.TRANSLATIONAL_PID.kP = 0;
+            RobotConstants.TRANSLATIONAL_PID.kI = 0;
+            RobotConstants.TRANSLATIONAL_PID.kD = 0;
+            RobotConstants.HEADING_PID.kP = 0;
+            RobotConstants.HEADING_PID.kI = 0;
+            RobotConstants.HEADING_PID.kD = 0;
+        }
+        else if (enabled && savedGains != null)
+        {
+            RobotConstants.TRANSLATIONAL_PID.kP = savedGains[0];
+            RobotConstants.TRANSLATIONAL_PID.kI = savedGains[1];
+            RobotConstants.TRANSLATIONAL_PID.kD = savedGains[2];
+            RobotConstants.HEADING_PID.kP = savedGains[3];
+            RobotConstants.HEADING_PID.kI = savedGains[4];
+            RobotConstants.HEADING_PID.kD = savedGains[5];
+            savedGains = null;
+        }
     }
 
     /** Run drive.update() until the current trajectory/sequence ends or the OpMode stops. */
