@@ -25,7 +25,7 @@ import java.util.Locale;
 @Autonomous(name = "RR 5a StraightTest", group = "RR Tuning")
 public class StraightTest extends RRTuningOpMode
 {
-    public static double DISTANCE = 60; // in
+    public static double DISTANCE = 100; // in
     public static boolean FEEDBACK = false;
 
     @Override

@@ -38,9 +38,14 @@ Drive with the left stick, turn with the right stick.
 | Push forward → **x goes up** | Flip the X pod's `EncoderDirection` |
 | Push left → **y goes up** | Flip the Y pod's `EncoderDirection` |
 | Turn CCW → **heading goes up** | Pinpoint mounting / orientation |
-| Drive 48 in by tape measure → x reads ~48 | Pod type (`setEncoderResolution`) |
 | Spin in place several times → x and y stay near 0 | Pod offsets (`setOffsets`) |
 | Face 90°, drive forward → **robot vel x** is positive and robot vel y is ~0 | Set `PinpointLocalizer.VELOCITY_TO_ROBOT_FRAME` false |
+
+Then the distance check, with no joystick: run **`RR 5a StraightTest`** (it drives itself
+`DISTANCE` = 100 in). Measure how far the robot really went with a tape measure and compare it to
+the **finalX** it reports. They should agree within about half an inch, whether or not the robot
+stopped exactly at 100. If they disagree, check the pod type (`setEncoderResolution`) and pod
+directions. (Comparing finalX to 100 is a different check: that's tuning, covered in step 3.)
 
 Nothing else is worth tuning until this is right.
 
