@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import androidx.annotation.NonNull;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.Localizer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -11,7 +12,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
 
+@Config
 public class PinpointLocalizer implements Localizer {
+    /**
+     * Road Runner 0.x expects getPoseVelocity() in the ROBOT frame (the follower's D terms and the
+     * tuners use it that way), but the Pinpoint reports velocity in the FIELD frame. When true the
+     * velocity is rotated into the robot frame. Check with "RR 1 LocalizationTest": turn the robot
+     * 90 degrees and drive forward; "robot vel x" should be positive and "robot vel y" near zero.
+     */
+    public static boolean VELOCITY_TO_ROBOT_FRAME = true;
+
     private static final String TAG = "pinpoint";
     private final GoBildaPinpointDriver pinpoint;
     private Pose2d poseEstimate;
@@ -83,6 +93,16 @@ public class PinpointLocalizer implements Localizer {
         double vx = pinpoint.getVelX(DistanceUnit.INCH);
         double vy = pinpoint.getVelY(DistanceUnit.INCH);
         double headingVel = pinpoint.getHeadingVelocity();
+
+        if (VELOCITY_TO_ROBOT_FRAME) {
+            // rotate the field-frame velocity by -heading to get the robot-frame velocity
+            double cos = Math.cos(heading);
+            double sin = Math.sin(heading);
+            double rvx =  cos * vx + sin * vy;
+            double rvy = -sin * vx + cos * vy;
+            vx = rvx;
+            vy = rvy;
+        }
 
         poseVelocity = new Pose2d(vx, vy, headingVel);
 
