@@ -40,24 +40,35 @@ Drive with the left stick, turn with the right stick.
 | Turn CCW → **heading goes up** | Pinpoint mounting / orientation |
 | Spin in place several times → x and y stay near 0 | Pod offsets (`setOffsets`) |
 | Face 90°, drive forward → **robot vel x** is positive and robot vel y is ~0 | Set `PinpointLocalizer.VELOCITY_TO_ROBOT_FRAME` false |
+| Drive straight along 4 field tiles (96 in) → x reads roughly 96 | Pod type (`setEncoderResolution`) |
 
-Then the distance check, with no joystick: run **`RR 5a StraightTest`** (it drives itself
-`DISTANCE` = 100 in). Measure how far the robot really went with a tape measure and compare it to
-the **finalX** it reports. They should agree within about half an inch, whether or not the robot
-stopped exactly at 100. If they disagree, check the pod type (`setEncoderResolution`) and pod
-directions. (Comparing finalX to 100 is a different check: that's tuning, covered in step 3.)
+The last row is only a rough check (a wrong pod type is ~50% off, easy to see). The exact
+tape-measure check is the first thing in step 3.
 
-Nothing else is worth tuning until this is right.
+This has to come before step 2: the max velocity tuners read their speeds from the Pinpoint.
 
 ### 2. Speed limits: `RR 2a MaxVelocityTuner`, `RR 2b MaxAngularVeloTuner`
 Set `MAX_VEL` and `MAX_ANG_VEL` (radians) to about **80%** of the measured maximum.
 A path can't ask for more speed than the motors have.
 
-### 3. Feedforward: `kV`, `kStatic`, `kA`
-* **`RR 3a AutomaticFeedforwardTuner`** gives starting values (Y = fit kStatic, Y = fit kA).
-  Enter them.
-* **`RR 3b ManualFeedforwardTuner`** (AXIS = FORWARD) refines them. Graph `targetVelocity` and
-  `measuredVelocity` in Dashboard. The robot drives back and forth with the PIDs not involved.
+This has to come before step 3: StraightTest's path is planned at `MAX_VEL`. With a `MAX_VEL` the
+robot can't reach, it always comes up short and step 3 would suggest a `kV` that's too big.
+
+### 3. Drive forward and feedforward: `RR 5a StraightTest`, then `kV`, `kStatic`, `kA`
+**StraightTest** drives itself forward `DISTANCE` = 100 in (no joystick), with `FEEDBACK = false`.
+Every run gives you two numbers to compare:
+
+1. **Tape measure vs. finalX → Pinpoint accuracy.** Measure how far the robot really went and
+   compare it to the **finalX** it reports. They should agree within about ½ in, whether or not
+   it stopped at 100. If not, fix the pod type / directions and redo step 2.
+2. **finalX vs. 100 → `kV`.** Came up short → raise kV. Went too far → lower kV. It prints a
+   suggested kV. Enter it in Dashboard and run again until it stops within an inch or two.
+
+To fine-tune past that (or fill in `kStatic` and `kA`):
+* **`RR 3a AutomaticFeedforwardTuner`** gives starting values for all three (Y = fit kStatic,
+  Y = fit kA). Optional if StraightTest already got kV close.
+* **`RR 3b ManualFeedforwardTuner`** (AXIS = FORWARD) drives back and forth with the PIDs not
+  involved. Graph `targetVelocity` and `measuredVelocity` in Dashboard:
 
 | What the graph shows | Change |
 |---|---|
@@ -68,9 +79,6 @@ A path can't ask for more speed than the motors have.
 | Ramps overshoot target | Lower `kA` |
 
 Get kV right first, then kStatic, then kA.
-
-**Your old "drive forward" test:** `RR 5a StraightTest` with `FEEDBACK = false` checks the same
-thing without a graph. Came up short → raise kV. Went too far → lower kV. It prints a suggested kV.
 
 ### 4. Strafe: `LATERAL_MULTIPLIER` (your old "strafe" test)
 `RR 5b StrafeTest` with `FEEDBACK = false`. Mecanum wheels slip when strafing, so a strafe needs
@@ -131,7 +139,8 @@ code values back. Write each value down as you go. At the end, put them in `Robo
 | Pinpoint directions / offsets / pod type | RR 1 LocalizationTest | `PinpointLocalizer` |
 | `MAX_VEL` | RR 2a MaxVelocityTuner | 80% of result |
 | `MAX_ANG_VEL` | RR 2b MaxAngularVeloTuner | 80% of result |
-| `kV`, `kStatic`, `kA` | RR 3a → RR 3b (FORWARD) or RR 5a (FEEDBACK=false) | |
+| Pinpoint accuracy (exact) | RR 5a StraightTest | tape vs. finalX |
+| `kV`, `kStatic`, `kA` | RR 5a (FEEDBACK=false), then RR 3a / RR 3b (FORWARD) | |
 | `LATERAL_MULTIPLIER` | RR 5b (FEEDBACK=false) or RR 3b (STRAFE) | |
 | `DT_TRACK_WIDTH` | RR 4 TrackWidthTuner or RR 5c (FEEDBACK=false) | |
 | `TRANSLATIONAL_PID` | RR 6a BackAndForth | graph xError |
