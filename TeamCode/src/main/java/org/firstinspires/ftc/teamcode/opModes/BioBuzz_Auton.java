@@ -361,7 +361,9 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
 
         es.shutdownNow();
 
-        if(camera != null)
+        // Close the AprilTag camera so TeleOp can open it. (This used to check the
+        // EasyOpenCV 'camera', which is always null here, so close() never ran.)
+        if(visionPortal != null)
         {
             visionPortal.close();
   //          camera.stopStreaming();

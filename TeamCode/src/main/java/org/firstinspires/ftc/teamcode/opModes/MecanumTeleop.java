@@ -1046,6 +1046,7 @@ public class MecanumTeleop extends InitLinearOpMode
 //            if(VERBOSE){RobotLog.vv(TAG, "looping");}
         }
  //       robot.shooter.shooterAngleCold();
+        robot.closeCamera();
     }
 
     double spinnerPwr = RobotConstants.SP_POWER;

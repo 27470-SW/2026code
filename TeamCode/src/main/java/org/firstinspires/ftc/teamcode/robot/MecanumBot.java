@@ -427,6 +427,16 @@ public class MecanumBot extends BasicBot {
     private AprilTagProcessor aprilTag;              // Used for managing the AprilTag detection process.
 
 
+    private static final double CAMERA_OPEN_TIMEOUT_SEC = 3.0;
+
+    /** Release the webcam. Call at the end of auton so TeleOp can open it right away. */
+    public void closeCamera() {
+        if (visionPortal != null) {
+            visionPortal.close();
+            visionPortal = null;
+        }
+    }
+
     private void setManualExposure(int exposureMS, int gain) throws InterruptedException {
         // Wait for the camera to be open, then use the controls
         RobotLog.dd(TAG, String.format("In Manual Exposure"));
@@ -441,15 +451,21 @@ public class MecanumBot extends BasicBot {
         if (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
             RobotLog.dd(TAG, "Camera not streaming");
 
-            while (!opMode.isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING)) {
+            // Don't wait forever: if the camera is unplugged or fails to open, the opmode
+            // would otherwise be stuck here and the robot would never drive.
+            ElapsedTime camWait = new ElapsedTime();
+            while (!opMode.isStopRequested()
+                    && visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING
+                    && visionPortal.getCameraState() != VisionPortal.CameraState.ERROR
+                    && camWait.seconds() < CAMERA_OPEN_TIMEOUT_SEC) {
                 Thread.sleep(20);
             }
-            RobotLog.dd(TAG, "Camera Ready");
-
+            RobotLog.dd(TAG, "Camera state after %.1fs: %s", camWait.seconds(), visionPortal.getCameraState());
         }
 
-        // Set camera controls unless we are stopping.
-        if (!opMode.isStopRequested()) {
+        // Set camera controls unless we are stopping (or the camera never started).
+        if (!opMode.isStopRequested()
+                && visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
             ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
             if (exposureControl.getMode() != ExposureControl.Mode.Manual) {
                 exposureControl.setMode(ExposureControl.Mode.Manual);
