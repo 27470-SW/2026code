@@ -13,10 +13,6 @@ import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.robot.MecanumBot;
 import org.firstinspires.ftc.teamcode.robot.MecanumDriveLRR;
@@ -29,14 +25,13 @@ import org.firstinspires.ftc.teamcode.util.PreferenceMgr;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
+import static org.firstinspires.ftc.teamcode.field.Field.Alliance.BLUE;
 import static org.firstinspires.ftc.teamcode.field.Field.Alliance.RED;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
 import static org.firstinspires.ftc.teamcode.robot.Shooter.BALL_CHOICE.*;
@@ -57,7 +52,7 @@ public class MecanumTeleop extends InitLinearOpMode
     {
         // Initialize the Apriltag Detection process
         try {
-            initAprilTag();
+            robot.initAprilTag(hardwareMap, this);
         }catch(Exception e)
         {
             RobotLog.ee(TAG, "Unable to initialize April Tag Camera");
@@ -233,9 +228,10 @@ public class MecanumTeleop extends InitLinearOpMode
         Pose2d currentPose = mechDrv.getRealPoseEstimate();
             dashboard.displayText(l++, String.format(Locale.US, "X: %f, Y: %f, Heading: %f",currentPose.getX(),currentPose.getY(),Math.toDegrees(currentPose.getHeading())));
             dashboard.displayText(l++, String.format(Locale.US, "Localizer, %s", mechDrv.getLocalizer().getClass().getSimpleName()));
-            dashboard.displayText(l++, String.format(Locale.US, " Camera Found %b Camera Dist %f", targetFound, distanceToTheGoal));
+//            dashboard.displayText(l++, String.format(Locale.US, " Camera Found %b Camera Dist %f", targetFound, distanceToTheGoal));
             dashboard.displayText(l++, String.format(Locale.US, " intergral sum = %f", robot.shooterP.controlShooterW.getIntegralSum()));
-
+            dashboard.displayText(l++, String.format(Locale.US, " Camera State = %s", robot.visionPortal.getCameraState()));
+            dashboard.displayText(l++, String.format(Locale.US, " tipped = %b", robot.tippedState()));
         }
 
         if(VERBOSE) RobotLog.dd(TAG, "TEL SHT:%.1f ARM:%.1f INT:%.1f DRV:%.1f",
@@ -616,18 +612,24 @@ public class MecanumTeleop extends InitLinearOpMode
                     // Look to see if we have size info on this tag.
                    if (detection.metadata != null) {
                        //  Check to see if we want to track towards this tag.
-                       if ((detection.id == RED_GOAL_APRIL_TAG || detection.id == BLUE_GOAL_APRIL_TAG )) {
+                       if ((alliance == RED && (detection.id == RED_CELL_APRIL_TAG1_FIRST || detection.id == RED_CELL_APRIL_TAG2_FIRST || detection.id == RED_CELL_APRIL_TAG3_FIRST || detection.id == RED_CELL_APRIL_TAG4_FIRST || detection.id == RED_CELL_APRIL_TAG1 || detection.id == RED_CELL_APRIL_TAG2 || detection.id == RED_CELL_APRIL_TAG3 || detection.id == RED_CELL_APRIL_TAG4))) {
                             // Yes, we want to use this tag.
                            targetFound = true;
                             desiredTag = detection;
                             break;  // don't look any further.
-                        } else {
+                        }
+                       else if ((alliance == BLUE && (detection.id == BLUE_CELL_APRIL_TAG1_FIRST || detection.id == BLUE_CELL_APRIL_TAG2_FIRST || detection.id == BLUE_CELL_APRIL_TAG3_FIRST || detection.id == BLUE_CELL_APRIL_TAG4_FIRST || detection.id == BLUE_CELL_APRIL_TAG1 || detection.id == BLUE_CELL_APRIL_TAG2 || detection.id == BLUE_CELL_APRIL_TAG3 || detection.id == BLUE_CELL_APRIL_TAG4))) {
+                           // Yes, we want to use this tag.
+                           targetFound = true;
+                           desiredTag = detection;
+                           break;  // don't look any further.
+                       }else {
                             // This tag is in the library, but we do not want to track it right now.
                             telemetry.addData("Skipping", "Tag ID %d is not desired", detection.id);
                         }
-                    } else {
+                   // } else {
                         // This tag is NOT in the library, so we don't have enough information to track to it.
-                        telemetry.addData("Unknown", "Tag ID %d is not in TagLibrary", detection.id);
+                     //   telemetry.addData("Unknown", "Tag ID %d is not in TagLibrary", detection.id);
                     }
                 }
 
@@ -717,74 +719,13 @@ public class MecanumTeleop extends InitLinearOpMode
         /**
          * Initialize the AprilTag processor.
          */
-        private void initAprilTag() {
-            // Create the AprilTag processor by using a builder.
-            aprilTag = new AprilTagProcessor.Builder()
-             .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
-                    .build();
 
-            // Adjust Image Decimation to trade-off detection-range for detection-rate.
-            // eg: Some typical detection data using a Logitech C920 WebCam
-            // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
-            // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
-            // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second
-            // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second
-            // Note: Decimation can be changed on-the-fly to adapt during a match.
-            aprilTag.setDecimation(1);
-
-            // Create the vision portal by using a builder.
-            if (USE_WEBCAM) {
-                visionPortal = new VisionPortal.Builder()
-                        .setCamera(hardwareMap.get(WebcamName.class, "webcamRIGHT"))
-                        .addProcessor(aprilTag)
-                        .build();
-                setManualExposure(5, 250);  // Use low exposure time to reduce motion blur
-            } else {
-                visionPortal = new VisionPortal.Builder()
-                        .setCamera(BuiltinCameraDirection.BACK)
-                        .addProcessor(aprilTag)
-                        .build();
-            }
-        }
 
         /*
          Manually set the camera gain and exposure.
          This can only be called AFTER calling initAprilTag(), and only works for Webcams;
         */
-        private void    setManualExposure(int exposureMS, int gain) {
-            // Wait for the camera to be open, then use the controls
 
-            if (visionPortal == null) {
-                return;
-            }
-
-            // Make sure camera is streaming before we try to set the exposure controls
-            if (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
-                telemetry.addData("Camera", "Waiting");
-                telemetry.update();
-                while (!isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING)) {
-                    sleep(20);
-                }
-                telemetry.addData("Camera", "Ready");
-                telemetry.update();
-            }
-
-            // Set camera controls unless we are stopping.
-            if (!isStopRequested())
-            {
-                ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
-                if (exposureControl.getMode() != ExposureControl.Mode.Manual) {
-                    exposureControl.setMode(ExposureControl.Mode.Manual);
-                    sleep(50);
-                }
-                exposureControl.setExposure((long)exposureMS, TimeUnit.MILLISECONDS);
-                sleep(20);
-                GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
-                gainControl.setGain(gain);
-                if(VERBOSE){RobotLog.dd(TAG, String.format("Min Gain: %d, Max Gain: %d", gainControl.getMinGain(), gainControl.getMaxGain()));}
-                sleep(20);
-            }
-        }
 
 
     private Pose2d setEndPose(Pose2d p1, double y){
@@ -843,7 +784,7 @@ public class MecanumTeleop extends InitLinearOpMode
         double rightTrig = gpad2.value(ManagedGamepad.AnalogInput.R_TRIGGER_VAL);
         double leftJoyY = gpad2.value(ManagedGamepad.AnalogInput.L_STICK_Y);
         //boolean engageAutoTraj = gpad2.just_pressed(ManagedGamepad.Button.B) && !gpad2.pressed(ManagedGamepad.Button.START);
-        double leftTrig = gpad2.value(ManagedGamepad.AnalogInput.L_TRIGGER_VAL);
+        double leftTrig = 1;// gpad2.value(ManagedGamepad.AnalogInput.L_TRIGGER_VAL);
         boolean xDown = gpad2.just_pressed(ManagedGamepad.Button.X);
         boolean yUp = gpad2.just_pressed(ManagedGamepad.Button.Y);
         boolean trajLimitBreaker = gpad2.pressed(ManagedGamepad.Button.A)&& !gpad2.pressed(ManagedGamepad.Button.START);
@@ -894,20 +835,23 @@ public class MecanumTeleop extends InitLinearOpMode
 
                 RobotLog.dd(TAG, "trigger pressed");
             }
-            else if(opTimer.milliseconds() <= intakeOffTime + BACKWARD_TRANSITION_TIME) {
-                robot.transitionWheels.moveAtRate(-1);
-            }
+//            else if(opTimer.milliseconds() <= intakeOffTime + BACKWARD_TRANSITION_TIME) {
+//                robot.transitionWheels.moveAtRate(-1);
+//            }
             else if (bDown) {
                 robot.transitionWheels.moveAtRate(-1);
-            } else{
-                robot.transitionWheels.moveAtRate(0);
-            }
-
-            if(rightTrig < 0.3)
+                robot.shooterP.reverse((leftTrig >= 0.3));
+                robot.shooterN.reverse(leftTrig >= 0.3);
+            }else if(rightTrig < 0.3)
             {
                 robot.shooterN.stop();
                 robot.shooterP.stop ();
+                robot.transitionWheels.moveAtRate(0);
             }
+            else{
+                robot.transitionWheels.moveAtRate(0);
+            }
+
 
         }
         if (ResetTrajEnc){
@@ -953,7 +897,7 @@ public class MecanumTeleop extends InitLinearOpMode
         }
         if(dpadUp && !aDown){
             robot.hummingBird.setPosition(0.2);
-            robot.babyHummingbird.setPosition(1);
+            robot.babyHummingbird.setPosition(.5);
         }
         else if(dpadDown && !aDown){
             robot.hummingBird.setPosition(0);

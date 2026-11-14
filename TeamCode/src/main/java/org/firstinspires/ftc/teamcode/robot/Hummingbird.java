@@ -16,7 +16,7 @@ public class Hummingbird {
             servoH1 = hwMap.get(Servo.class, servoH1Name);
             servoH2 = hwMap.get(Servo.class, servoH2Name);
         }catch(Exception e){
-            RobotLog.ee(TAG, "Unable to find hummingbird");
+            RobotLog.ee(TAG, "Unable to find hummingbird %s %s", servoH1Name, servoH2Name);
         }
         //percent = 0.5;
       //  onIntake = 1;

@@ -1,61 +1,82 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static org.firstinspires.ftc.teamcode.field.Field.Alliance.BLUE;
+import static org.firstinspires.ftc.teamcode.field.Field.Alliance.RED;
 import static org.firstinspires.ftc.teamcode.robot.Motors.MotorModel.GOBILDA_5202_13_7;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.ARM_NUM_LEVS;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO2;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.EL_SPD;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.EL_SPD_DWN;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG1_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG2;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG2_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG3;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG3_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG4;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG4_FIRST;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDSTARTINGPOS;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO2;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.WR_SENSE;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG1_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG2;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG2_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG3;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG3_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG4;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG4_FIRST;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
+import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.util.CommonUtil;
-
+import org.firstinspires.ftc.teamcode.util.PreferenceMgr;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import java.util.List;
-import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 
-public class MecanumBot extends BasicBot
-{
+public class MecanumBot extends BasicBot {
     private static final String TAG = "SJH_MEC";
 
     //public Claw claw = null;
     //Still need this for now for backward compatibility
 
 
-
-//public ServoIntake servoIntake =null;
-public CrAzYintake crAzYIntake =null;
-public Shooter shooterN =null;
-public Shooter shooterP =null;
-public Hummingbird babyHummingbird=null;
-public Hummingbird hummingBird=null;
-public MotorComponent transitionWheels=null;
+    //public ServoIntake servoIntake =null;
+    public CrAzYintake crAzYIntake = null;
+    public Shooter shooterN = null;
+    public Shooter shooterP = null;
+    public Hummingbird babyHummingbird = null;
+    public Hummingbird hummingBird = null;
+    public MotorComponent transitionWheels = null;
 
     public double logIntakeCurSpd = 0.0;
 
-    public MecanumBot()
-    {
+    public MecanumBot() {
         super();
 
-        name= "27470";
-        bulkCachingMode =  LynxModule.BulkCachingMode.MANUAL;
+        name = "27470";
+        bulkCachingMode = LynxModule.BulkCachingMode.MANUAL;
 
         DRIVE_GEARS =
-          new double[]{RobotConstants.DT_MOTOR.getGear(), RobotConstants.DT_EXT_GEAR_RATIO};
+                new double[]{RobotConstants.DT_MOTOR.getGear(), RobotConstants.DT_EXT_GEAR_RATIO};
 
         WHEEL_DIAMETER_INCHES = RobotConstants.DT_WHEEL_DIAM;
 
@@ -63,8 +84,7 @@ public MotorComponent transitionWheels=null;
     }
 
     @Override
-    public void init(LinearOpMode op, boolean initDirSensor)
-    {
+    public void init(LinearOpMode op, boolean initDirSensor) {
         RobotLog.dd(TAG, "MecanumBot init " + name);
         initCore(op);
 
@@ -116,16 +136,13 @@ public MotorComponent transitionWheels=null;
     }
 
 
-
     @Override
-    protected void initDriveMotors()
-    {
+    protected void initDriveMotors() {
         RobotLog.dd(TAG, TAG + "Initializing drive motors");
         drive = new MecanumDriveLRR(imu);
         //Roadrunner mech drive starts with FL motor and goes counterclockwise (FL,BL,BR,FR)
-        try
-        {
-            List<DcMotorEx> mtrs = ((MecanumDriveLRR)drive).getMotors();
+        try {
+            List<DcMotorEx> mtrs = ((MecanumDriveLRR) drive).getMotors();
             motors.put("FL", mtrs.get(0));
             motors.put("BL", mtrs.get(1));
             motors.put("BR", mtrs.get(2));
@@ -133,9 +150,7 @@ public MotorComponent transitionWheels=null;
 
             capMap.put("drivetrain", true);
             CommonUtil.getInstance().getDashboard().displayText(6, "TRMB_MOTORS: " + mtrs.size());
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             RobotLog.ee(TAG, "ERROR get motors in MecanumBot\n" + e.toString());
         }
     }
@@ -146,12 +161,10 @@ public MotorComponent transitionWheels=null;
     private DigitalChannel greenLED2;
 
 
-
-   public int pixelPieces = 0;
+    public int pixelPieces = 0;
 
     @Override
-    protected void initJointControl()
-    {
+    protected void initJointControl() {
         RobotLog.dd(TAG, "init Lifter MecanumBot\n");
         //claw = new Claw (hwMap);
         //claw.maxClosed = .85;
@@ -166,11 +179,11 @@ public MotorComponent transitionWheels=null;
         //sweeperServo2 = new MotorComponent("sweeper2", hwMap);
         //intake = new Intake(hwMap);
 
-       // servoIntake = new ServoIntake(hwMap);
+        // servoIntake = new ServoIntake(hwMap);
         crAzYIntake = new CrAzYintake(hwMap);
         shooterP = new Shooter(hwMap);
         shooterN = new Shooter(hwMap);
-        babyHummingbird = new Hummingbird(hwMap,"baby1", "baby2", BABYHUMMINGBIRDZERO1, BABYHUMMINGBIRDZERO2);
+        babyHummingbird = new Hummingbird(hwMap, "baby1", "baby2", BABYHUMMINGBIRDZERO1, BABYHUMMINGBIRDZERO2);
         hummingBird = new Hummingbird(hwMap, "bird1", "bird2", HUMMINGBIRDZERO1, HUMMINGBIRDZERO2);
         transitionWheels = new MotorComponent("shooter1", hwMap);
 
@@ -230,15 +243,16 @@ public MotorComponent transitionWheels=null;
         */
 
 
-        crAzYIntake.init();
         shooterP.initShooter("shootP", RobotConstants.BallType.POLLEN);
         shooterN.initShooter("shootN", RobotConstants.BallType.NECTAR);
-        transitionWheels.init(GOBILDA_5202_13_7,1);
+        transitionWheels.init(GOBILDA_5202_13_7, 1);
         transitionWheels.setZeroPower(DcMotor.ZeroPowerBehavior.FLOAT);
         hummingBird.init(0.2);
         babyHummingbird.init(0);
 
-      //  slides.setMode(STOP_AND_RESET_ENCODER);        //TODO: make not happen when comming back from auton;
+        crAzYIntake.init();
+
+        //  slides.setMode(STOP_AND_RESET_ENCODER);        //TODO: make not happen when comming back from auton;
         //elbowMotor.init(RobotConstants.EL_EXT_M, -2);
 
     }
@@ -246,8 +260,7 @@ public MotorComponent transitionWheels=null;
     private final ElapsedTime updTimer = new ElapsedTime();
 
 
-    public void update()
-    {
+    public void update() {
         updTimer.reset();
         //RobotLog.dd(TAG, "pose(7) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
 
@@ -256,31 +269,25 @@ public MotorComponent transitionWheels=null;
 
         double botTime = updTimer.milliseconds();
         updTimer.reset();
-       // RobotLog.dd(TAG, "pose(9) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
+        // RobotLog.dd(TAG, "pose(9) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
 
 
-        if(shooterP != null)
-        {
+        if (shooterP != null) {
             shooterP.update();
         }
-        if(crAzYIntake != null)
-        {
+        if (crAzYIntake != null) {
             crAzYIntake.update();
         }
-        if(shooterN != null)
-        {
+        if (shooterN != null) {
             shooterN.update();
         }
-        if(babyHummingbird != null)
-        {
+        if (babyHummingbird != null) {
             babyHummingbird.update();
         }
-        if(hummingBird != null)
-        {
+        if (hummingBird != null) {
             hummingBird.update();
         }
-        if(transitionWheels != null)
-        {
+        if (transitionWheels != null) {
             transitionWheels.update();
         }
 
@@ -294,17 +301,17 @@ public MotorComponent transitionWheels=null;
 //            claw.update();
 //        }
         updTimer.reset();
-       // RobotLog.dd(TAG, "pose(12) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
+        // RobotLog.dd(TAG, "pose(12) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
 
 //        if(VERBOSE) { RobotLog.dd(TAG, "UPD BOT:%.2f LFT:%.2f CLW:%.2f", botTime, lftTime, clawTime); }
         ledUpdate();
     }
 
-    public Pose2d getPoseEstimate(){
+    public Pose2d getPoseEstimate() {
         return drive.getPoseEstimate();
     }
 
-    public void ledUpdate(){
+    public void ledUpdate() {
         /*switch (pixelPieces){
             case 2:
                 greenLED1.setState(false);
@@ -361,27 +368,27 @@ public MotorComponent transitionWheels=null;
 */
 
     public void initShooter() throws InterruptedException {
-       // shooterP.initPos();
+        // shooterP.initPos();
     }
-    public void initHummingBirds(){
+
+    public void initHummingBirds() {
         babyHummingbird.setPosition(0);
         hummingBird.setPosition(HUMMINGBIRDSTARTINGPOS);
     }
 
-   // public void initSlides() throws InterruptedException {
-   //    slides.initPos();
-   // }
+    // public void initSlides() throws InterruptedException {
+    //    slides.initPos();
+    // }
 
 
-  //  public void setClawPos(double input){
-   //         claw.setClawPos(input * WR_SENSE );
-  //  }
-
+    //  public void setClawPos(double input){
+    //         claw.setClawPos(input * WR_SENSE );
+    //  }
 
 
     boolean extenderStopped = true;
 
-    public void setExtenderPower(double input){
+    public void setExtenderPower(double input) {
 //        if(input >= .1 && extenderMotor.getCurEnc() < EX_MAX || input <= -.1 && extenderMotor.getCurEnc() > EX_MIN){
 //            extenderMotor.moveAtControlRate(input);
 //            extenderStopped = false;
@@ -394,23 +401,150 @@ public MotorComponent transitionWheels=null;
 
     }
 
+    final double DESIRED_DISTANCE = 13.0; //  this is how close the camera should get to the target (inches)
+    double DESIRED_HEADING = 0;
+    final double DESIRED_YAW = -5;
 
-public  int armLevel;
-public  int slideLevel;
+    //  Set the GAIN constants to control the relationship between the measured position error, and how much power is
+    //  applied to the drive motors to correct the error.
+    //  Drive = Error * Gain    Make these values smaller for smoother control, or larger for a more aggressive response.
+    final double SPEED_GAIN = 0.02;   //  Forward Speed Control "Gain". eg: Ramp up to 50% power at a 25 inch error.   (0.50 / 25.0)
+    final double STRAFE_GAIN = 0.04;   //  Strafe Speed Control "Gain".  eg: Ramp up to 25% power at a 25 degree Yaw error.   (0.25 / 25.0)
+    final double TURN_GAIN = 0.01;   //  Turn Control "Gain".  eg: Ramp up to 25% power at a 25 degree error. (0.25 / 25.0)
+
+    final double MAX_AUTO_SPEED = .1;   //  Clip the approach speed to this max value (adjust for your robot)
+    final double MAX_AUTO_STRAFE = 1;   //  Clip the approach speed to this max value (adjust for your robot)
+    final double MAX_AUTO_TURN = 0.1;   //  Clip the turn speed to this max value (adjust for your robot)
+
+    private DcMotor leftFrontDrive = null;  //  Used to control the left front drive wheel
+    private DcMotor rightFrontDrive = null;  //  Used to control the right front drive wheel
+    private DcMotor leftBackDrive = null;  //  Used to control the left back drive wheel
+    private DcMotor rightBackDrive = null;  //  Used to control the right back drive wheel
+
+    private static final boolean USE_WEBCAM = true;  // Set true to use a webcam, or false for a phone camera
+    private static int DESIRED_TAG_ID = -1;     // Choose the tag you want to approach or set to -1 for ANY tag.
+    public VisionPortal visionPortal;               // Used to manage the video source.
+    private AprilTagProcessor aprilTag;              // Used for managing the AprilTag detection process.
 
 
-    //TODO: combine arm and slide together into a single level concept
+    private void setManualExposure(int exposureMS, int gain) throws InterruptedException {
+        // Wait for the camera to be open, then use the controls
+        RobotLog.dd(TAG, String.format("In Manual Exposure"));
+
+        if (visionPortal == null) {
+            return;
+        }
+        RobotLog.dd(TAG, "Valid VisionPortal");
 
 
+        // Make sure camera is streaming before we try to set the exposure controls
+        if (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            RobotLog.dd(TAG, "Camera not streaming");
+
+            while (!opMode.isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING)) {
+                Thread.sleep(20);
+            }
+            RobotLog.dd(TAG, "Camera Ready");
+
+        }
+
+        // Set camera controls unless we are stopping.
+        if (!opMode.isStopRequested()) {
+            ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
+            if (exposureControl.getMode() != ExposureControl.Mode.Manual) {
+                exposureControl.setMode(ExposureControl.Mode.Manual);
+                Thread.sleep(50);
+            }
+            exposureControl.setExposure((long) exposureMS, TimeUnit.MILLISECONDS);
+            Thread.sleep(20);
+            GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
+            gainControl.setGain(gain);
+            if (VERBOSE) {
+                RobotLog.dd(TAG, String.format("Min Gain: %d, Max Gain: %d", gainControl.getMinGain(), gainControl.getMaxGain()));
+            }
+            Thread.sleep(20);
+        }
+    }
+
+    private AprilTagSingleDetection desiredTag = null;
+// Used to hold the data for a detected AprilTag
+
+    private LinearOpMode opMode;
+
+    public void initAprilTag(HardwareMap hardwareMap, LinearOpMode callerOpMode) {
+        opMode = callerOpMode;
+        setAlliance(Field.Alliance.valueOf(PreferenceMgr.getAllianceColor()));
+        // Create the AprilTag processor by using a builder.
+        aprilTag = new AprilTagProcessor.Builder()
+                .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
+                .build();
+
+        // Adjust Image Decimation to trade-off detection-range for detection-rate.
+        // eg: Some typical detection data using a Logitech C920 WebCam
+        // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
+        // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
+        // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second
+        // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second
+        // Note: Decimation can be changed on-the-fly to adapt during a match.
+        aprilTag.setDecimation(1);
+
+        // Create the vision portal by using a builder.
+        if (USE_WEBCAM) {
+            visionPortal = new VisionPortal.Builder()
+                    .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                    .addProcessor(aprilTag)
+                    .build();
+            try {
+                setManualExposure(5, 250);  // Use low exposure time to reduce motion blur
+            } catch (Exception e) {
+                RobotLog.dd(TAG, String.format("setManualExposure failed: %s", e.getMessage()));
+            }
+
+        } else {
+            visionPortal = new VisionPortal.Builder()
+                    .setCamera(BuiltinCameraDirection.BACK)
+                    .addProcessor(aprilTag)
+                    .build();
+        }
+    }
+
+    public boolean tippedState() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        //RobotLog.dd(TAG, String.format("in tipped State"));
+
+        // Step through the list of detections and display info for each one.
+        for (AprilTagDetection anyDetection : currentDetections) {
+
+            // SDK 12+: detections can be single tags or tag clusters; only single tags have id/metadata.
+            if (!(anyDetection instanceof AprilTagSingleDetection)) continue;
+            AprilTagSingleDetection detection = (AprilTagSingleDetection) anyDetection;
+            // Look to see if we have size info on this tag.
+            if (detection.metadata != null) {
+                //  Check to see if we want to track towards this tag.
+                RobotLog.dd(TAG, String.format("detected aprilTag: %d", detection.id));
+                if ((RobotConstants.alliance == RED && (detection.id == RED_CELL_APRIL_TAG1_FIRST || detection.id == RED_CELL_APRIL_TAG2_FIRST || detection.id == RED_CELL_APRIL_TAG3_FIRST || detection.id == RED_CELL_APRIL_TAG4_FIRST || detection.id == RED_CELL_APRIL_TAG1 || detection.id == RED_CELL_APRIL_TAG2 || detection.id == RED_CELL_APRIL_TAG3 || detection.id == RED_CELL_APRIL_TAG4))) {
+                    // Yes, we want to use this tag.
+                    desiredTag = detection;
+                    return true;
+
+                    // don't look any further.
+                } else if ((RobotConstants.alliance == BLUE && (detection.id == BLUE_CELL_APRIL_TAG1_FIRST || detection.id == BLUE_CELL_APRIL_TAG2_FIRST || detection.id == BLUE_CELL_APRIL_TAG3_FIRST || detection.id == BLUE_CELL_APRIL_TAG4_FIRST || detection.id == BLUE_CELL_APRIL_TAG1 || detection.id == BLUE_CELL_APRIL_TAG2 || detection.id == BLUE_CELL_APRIL_TAG3 || detection.id == BLUE_CELL_APRIL_TAG4))) {
+                    // Yes, we want to use this tag.
+                    desiredTag = detection;
+                    return true;
+                }
+
+            }
+        }
+
+//public  int armLevel;
+//public  int slideLevel;
 
 
+        //TODO: combine arm and slide together into a single level concept
 
 
-
-
-
-
-
-
-
+        return false;
+    }
 }
+

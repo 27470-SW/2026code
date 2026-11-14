@@ -17,6 +17,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.*;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BallType.NECTAR;
 import static org.firstinspires.ftc.teamcode.test.TestPIDshooter.targetVelocity;
 
 import static java.lang.Math.signum;
@@ -46,6 +47,7 @@ public class Shooter
     public boolean initShooter(String shoot, BallType ball)
     {
         boolean success = false;
+        this.ball = ball;
         try{
             wheelGuards = hwMap.get(Servo.class, "wheelguards");
         }
@@ -115,7 +117,7 @@ public class Shooter
 
 
 
-        if (ball == BallType.NECTAR) shooter1 = hwMap.get(Servo.class,"nectar");
+        if (ball == NECTAR) shooter1 = hwMap.get(Servo.class,"nectar");
         else shooter1 = hwMap.get(Servo.class, "pollen");
             RobotLog.dd(TAG, "shoter servo initialized" );
         }
@@ -236,12 +238,22 @@ public class Shooter
         //shooter2.stop();
         //shooter3.stop();
     }
-public void stopWheel(){
-        cps = 0.0;
-    if(shooterW != null) controlShooterW.setWheelVelocity(cps);
-    if(shooterW2 != null) shooterW2.setVelocity(cps);
+    public void reverse(boolean shooter)
+    {
+        if(NECTAR == ball) shooter1.setPosition(0);
+        else shooter1.setPosition(1);
+        if(!shooter) reverseWheel();
+    }
+    public void reverseWheel(){
+        if(shooterW != null) controlShooterW.setWheelVelocity(-600);
+//        if(shooterW2 != null) shooterW2.setVelocity(-600);
+    }
+    public void stopWheel(){
+            cps = 0.0;
+        if(shooterW != null) controlShooterW.setWheelVelocity(cps);
+        if(shooterW2 != null) shooterW2.setVelocity(cps);
 
-}
+    }
     private static final double g = -9.81 *3.28084 *12;
     private static final double height = 35;
     private static final double heightOfShooter = 10;
@@ -524,6 +536,7 @@ public void stopWheel(){
     private double v0 = 0.0;
     public boolean engageAutoTraj = false;
     public Servo wheelGuards =null;
+    public BallType ball;
 
     private DcMotor.RunMode shtmode = RUN_USING_ENCODER;
 
