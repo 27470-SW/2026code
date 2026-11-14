@@ -79,6 +79,14 @@ public class CrAzYintake
         } catch (Exception e) {
             RobotLog.ee(TAG, "ERROR get hardware map initIntake servo 4\n" + e.toString());
         }
+        try {
+            Thread.sleep(500);
+            setPwr(.1);
+            Thread.sleep(1500);
+            setPwr(0);
+        } catch (Exception e) {
+            RobotLog.ee(TAG, "unable to init intake" + e.toString());
+        }
         return success;
     }
 

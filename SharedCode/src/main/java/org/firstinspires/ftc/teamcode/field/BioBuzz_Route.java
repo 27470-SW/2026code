@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode.field;
 
 import com.qualcomm.robotcore.util.RobotLog;
 
-import static org.firstinspires.ftc.teamcode.field.Field.Direction.*;
 import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
-import static org.firstinspires.ftc.teamcode.field.Field.Under_Hive.*;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
@@ -93,6 +91,8 @@ public abstract class BioBuzz_Route extends Route
   protected abstract void intakeOff();
   protected abstract void intakeonandthreeTransitionsDown();
   protected abstract void transitonUp();
+  protected abstract void transitionOn();
+    protected abstract void transitionOff();
   public    abstract void deliverSample();
   public    abstract void armToDrop();
     protected abstract void inclinePlaneDown ();
@@ -148,99 +148,22 @@ public abstract class BioBuzz_Route extends Route
 
        RobotLog.dd(TAG, "choosing park");
 
+ addLocation(staring_point,Movement.START, Heading.HEAD_DEFAULT);
 
 
-      /* if( startPos == START_FAR_RED_SIMPLE)
-       {
-           SimpleFarRED t1 = new SimpleFarRED(this);
-           t1.makeTraj(START_FAR_RED_SIMPLE, parkPos, lastLocation);
+        if (startPos == START_FIRST){
+           StartFirst t1 = new StartFirst(this);
+           t1.makeTraj(startPos, parkPos, lastLocation); 
        }
-        else if (startPos==START_FAR_BLUE_SIMPLE)
-       {
-           SimpleFarBlue t1 = new SimpleFarBlue(this);
-           t1.makeTraj(START_FAR_RED_SIMPLE, parkPos, lastLocation);
-       }
-       else if (startPos==START_FARFAR_RED_SIMPLE)
-       {
-           COMPLEXFarRED t1 = new COMPLEXFarRED(this);
-           t1.makeTraj(START_FAR_RED_SIMPLE, parkPos, lastLocation);
-       }
-       else if (startPos==START_FARFAR_BLUE_SIMPLE)
-       {
-           ComplexFarBlue t1 = new ComplexFarBlue(this);
-           t1.makeTraj(START_FAR_RED_SIMPLE, parkPos, lastLocation);
-       }
-       else if( startPos == MAINFARROUTERED)
-       {
-           MAINFARROUTERED t1 = new MAINFARROUTERED(this);
+       else if (startPos == START_SECOND){
+           StartSecond t1 = new StartSecond(this);
            t1.makeTraj(startPos, parkPos, lastLocation);
        }
-
-       else if( startPos == MAINFARROUTEBLUE)
-       {
-           MAINFARROUTEBLUE t1 = new MAINFARROUTEBLUE(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if (startPos == FARMAINLYNEARRED)
-       {
-           FARMAINLYNEARRED t1 = new FARMAINLYNEARRED(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if (startPos == FARMAINLYNEARBLUE)
-       {
-           FARMAINLYNEARBLUE t1 = new FARMAINLYNEARBLUE(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_WALL_RED4)
-       {
-           Route4RED t1 = new  Route4RED(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_WALL_BLUE4)
-       {
-           Route4BLUE t1 = new Route4BLUE(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_HUMANONLY)
-       {
-           RouteHumanOnly t1 = new RouteHumanOnly(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_FAR_FAR_HUMAN_BLUE)
-       {
-           FarStayFarBlueHuman t1 = new FarStayFarBlueHuman(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_GOAL_ROUTE_RED)
-       {
-           GOALROUTERED t1 = new GOALROUTERED(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_GOAL_ROUTE_BLUE)
-       {
-           GOALROUTEBLUE t1 = new GOALROUTEBLUE(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if( startPos == START_FAR_RED6)
-       {
-           ROUTE6REDT t1 = new  ROUTE6REDT(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }else if( startPos == START_FAR_BLUE6)
-       {
-           ROUTE6BLUET t1 = new ROUTE6BLUET(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-       else if (startPos == STARTFARSTAYFARBLUE){
-           FarStayFarBlue t1 = new FarStayFarBlue(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-         else if (startPos == FARSTAYFARRED){
-             FarStayFarRed t1 = new FarStayFarRed(this);
-           t1.makeTraj(startPos, parkPos, lastLocation);
-       }
-*/
-       addLocation(staring_point,Movement.START, Heading.HEAD_DEFAULT);
-
+        else if (startPos == START_SECOND_PARK_CLOSE){
+            StartSecondParkClose t1 = new StartSecondParkClose(this);
+            t1.makeTraj(startPos, parkPos, lastLocation);
+        }
+/*
        whileBlock(() -> !isParking()); {
         //Start 1
            ifBlock(this::haveWiffles);{
@@ -313,9 +236,10 @@ public abstract class BioBuzz_Route extends Route
            }
 
        }
+	   
    }
        new park(this).makeTraj(startPos, parkPos, lastLocation);
-
+*/
 
 
 
@@ -583,6 +507,7 @@ public abstract class BioBuzz_Route extends Route
         tempParkRed = new Pose2d(sx * 57,-50,flip +sh*Math.toRadians(90));
         tempParkBlue = new Pose2d(sx * -30,-40,flip +sh*Math.toRadians(50));
 
+
         startRedFar = new Pose2d(sx * 20, -60, flip + sh*Math.toRadians(90));
 
         collect2 = new Pose2d (sx * 56, -46, flip + sh*Math.toRadians(67));
@@ -644,7 +569,8 @@ public abstract class BioBuzz_Route extends Route
         rotateToSample2 = new Pose2d(sx * 55, 56, flip + sh*Math.toRadians(-90));
         turnStraight = new Pose2d (sx * 56, 54, flip + sh*Math.toRadians(-90));
         sample3 = new Pose2d(sx * 41.6, 27, flip + sh*Math.toRadians(-4));
-        park = new Pose2d(sx * 28, 10, flip + sh*Math.toRadians(-180));
+        park1 = new Pose2d(sx * 28, 10, flip + sh*Math.toRadians(-180));
+		park = new Pose2d(sx * 28, 10, flip + sh*Math.toRadians(-180));
         positionToPark = new Pose2d(sx * 40,10 , flip + sh*Math.toRadians(-90));
         waitForHumanPlayer = new Pose2d(sx * -48, 48, flip + sh*Math.toRadians(89.9));
 		waitForHumanPlayer2 = new Pose2d(sx * -46, 45.75, flip + sh*Math.toRadians(89.9));
@@ -997,9 +923,21 @@ public abstract class BioBuzz_Route extends Route
 
          moveToFlower = new Pose2d(sx*-56,-20,flip + sh*Math.toRadians(180));
          startFirst = new Pose2d(sx*-12,-58,flip + sh*Math.toRadians(-90));
+         startSecond = new Pose2d(sx*-9,61,flip + sh*Math.toRadians(90));
+         startSecondParkFirst = new Pose2d(sx*-53,61,flip + sh*Math.toRadians(125));
+         gardenPrep1 = new Pose2d(sx*-12,-48,flip + sh*Math.toRadians(-180));
+         gardenPrep2 = new Pose2d(sx*-44,-58,flip + sh*Math.toRadians(-180));
+         gardenCollect = new Pose2d(sx*-59,-58,flip + sh*Math.toRadians(-180));
+         flower2Prep = new Pose2d(sx*-15.3,36,flip + sh*Math.toRadians(90));
+         flower2Prep2 = new Pose2d(sx*-23,36,flip + sh*Math.toRadians(-90));
+         flower2Collect1 = new Pose2d(sx*-23,52,flip + sh*Math.toRadians(-90));
+         flower2Collect2 = new Pose2d(sx*-23,56,flip + sh*Math.toRadians(-90));
          shootFlower = new Pose2d(sx*-12,-58,flip + sh*Math.toRadians(-90));
          preParkLoadZoneRed = new Pose2d(sx*-50.8,-40,flip + sh*Math.toRadians(90));
-         parkLoadZoneRed = new Pose2d(sx*-53,22.9,flip + sh*Math.toRadians(90));
+         preParkLoadZoneStartFirst = new Pose2d(sx*-50.8,-40,flip + sh*Math.toRadians(-90));
+         preParkLoadZoneStartSecond = new Pose2d(sx*-9,57,flip + sh*Math.toRadians(90));
+         parkLoadZoneRed = new Pose2d(sx*-70,34,flip + sh*Math.toRadians(-90));
+         parkLoadZone = new Pose2d(sx*-67,27,flip + sh*Math.toRadians(90));
 
          /* End Qualifier Route Points */
 
@@ -1083,7 +1021,19 @@ public abstract class BioBuzz_Route extends Route
 
     protected Pose2d moveToFlower;
     protected Pose2d startFirst;
+    protected Pose2d startSecond;
+    protected Pose2d startSecondParkFirst;
+    protected Pose2d gardenPrep1;
+    protected Pose2d gardenPrep2;
+    protected Pose2d gardenCollect;
+    protected Pose2d flower2Prep;
+    protected Pose2d flower2Prep2;
+    protected Pose2d flower2Collect1;
+    protected Pose2d flower2Collect2;
     protected Pose2d shootFlower;
+    protected Pose2d preParkLoadZoneStartFirst;
+    protected Pose2d preParkLoadZoneStartSecond;
+    protected Pose2d parkLoadZone;
     protected Pose2d preParkLoadZoneRed;
     protected Pose2d parkLoadZoneRed;
 
@@ -1215,7 +1165,8 @@ public abstract class BioBuzz_Route extends Route
     protected Pose2d positionSample3;
     protected Pose2d turnStraight;
     protected Pose2d positionToPark;
-    protected Pose2d park;
+    protected Pose2d park1;
+	protected Pose2d park;
     protected Pose2d park2;
 
     protected Pose2d deliverSample3ToBasket;

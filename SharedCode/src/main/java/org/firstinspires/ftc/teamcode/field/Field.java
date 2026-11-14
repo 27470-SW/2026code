@@ -73,25 +73,9 @@ public abstract class Field
     }
 
     public enum Start_Pos implements PositionOption{
-        START_FAR_RED_SIMPLE,
-        START_FARFAR_RED_SIMPLE,
-        MAINFARROUTERED,
-        FARMAINLYNEARRED,
-        FARSTAYFARRED,
-        START_WALL_RED4,
-        START_GOAL_ROUTE_RED,
-        START_FAR_RED6,
-        MAINFARROUTEBLUE,
-        FARMAINLYNEARBLUE,
-        STARTFARSTAYFARBLUE,
-        START_WALL_BLUE4,
-        START_GOAL_ROUTE_BLUE,
-        START_HUMANONLY,
-        START_FAR_FAR_HUMAN_BLUE,
-        START_FAR_BLUE6,
-        START_FAR_BLUE_SIMPLE,
-        START_FARFAR_BLUE_SIMPLE,
-        SHOOTFIRST
+        START_FIRST,
+        START_SECOND,
+        START_SECOND_PARK_CLOSE
 
 
         }
@@ -123,17 +107,40 @@ public abstract class Field
     }
     public enum Park_Pos implements PositionOption
     {
-        NOPARKRED,
-        INSIDEPRIMARYPARK1RED,
-        INSIDEPRIMARYPARK2RED,
-        OUTSIDEPRIMARYPARK1RED,
-        OUTSIDEPRIMARYPARK2RED,
-        INSIDEPRIMARYPARK1BLUE,
-        INSIDEPRIMARYPARK2BLUE,
-        OUTSIDEPRIMARYPARK1BLUE,
-        OUTSIDEPRIMARYPARK2BLUE,
-        N0PARKBLUE,
-        DEFAULT
+        PARK1,
+        PARK2,
+        NOPARK,
+
     }
 
+    public enum Partner_Start_Pos implements PositionOption
+    {
+        STARTFIRST,
+        STARTSECOND,
+    }
+    public enum Partner_Path implements PositionOption
+    {
+        INSIDE,
+        OUTSIDE,
+        NEITHER,
+
+    }
+    public enum Partner_Flower implements PositionOption
+    {
+        FLOWER1,
+        FLOWER2,
+        BOTHFLOWERS,
+        NEITHER,
+    }
+    public enum Partner_Garden implements PositionOption
+    {
+        TRUE,
+        FALSE,
+    }
+    public enum Hive_Tipped implements PositionOption
+    {
+        TRUE,
+        FALSE,
+
+    }
 }

@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
-import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.OUTSIDEPRIMARYPARK2RED;
-import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.START_FAR_RED6;
+//import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.OUTSIDEPRIMARYPARK2RED;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -202,18 +201,14 @@ public class AutonConfig extends InitLinearOpMode implements FtcMenu.MenuButtons
         FtcMenu topMenu = botMenu;
         if(!showBotMenu) topMenu = allianceMenu;
 
-        FtcChoiceMenu<Field.Start_Pos> startPosMenuRed
+        FtcChoiceMenu<Field.Start_Pos> startPosMenu
             = new FtcChoiceMenu<>("START:", allianceMenu, this);
-        FtcChoiceMenu<Field.Park_Pos> parkPosMenuRed
-                = new FtcChoiceMenu<>("Park Position:",   startPosMenuRed, this);
+        FtcChoiceMenu<Field.Park_Pos> parkPosMenu
+                = new FtcChoiceMenu<>("Park Position:",   startPosMenu, this);
 
-        FtcChoiceMenu<Field.Start_Pos> startPosMenuBlue
-                = new FtcChoiceMenu<>("START:", allianceMenu, this);
-        FtcChoiceMenu<Field.Park_Pos> parkPosMenuBlue
-                = new FtcChoiceMenu<>("Park Position:",   startPosMenuBlue, this);
 
         FtcChoiceMenu<Field.Num_shots> numShotMenu
-                = new FtcChoiceMenu<>("Number of 3-ball shots:",   parkPosMenuRed, this);
+                = new FtcChoiceMenu<>("Number of 3-ball shots:",   parkPosMenu, this);
         FtcChoiceMenu<Field.Wiffle_Pos> lastLocationMenu
                 = new FtcChoiceMenu<>("Last Location:",   numShotMenu, this);
 
@@ -238,27 +233,22 @@ public class AutonConfig extends InitLinearOpMode implements FtcMenu.MenuButtons
 
         for(Field.Alliance a : Field.Alliance.values())
         {
-            allianceMenu.addChoice(a.toString(), a, a==allianceColor, a== Field.Alliance.RED?startPosMenuRed:startPosMenuBlue);
+            allianceMenu.addChoice(a.toString(), a, a==allianceColor, startPosMenu);
         }
+
 
         for(Field.Start_Pos p : Field.Start_Pos.values())
-        {
-            if(p.ordinal() <= START_FAR_RED6.ordinal()) {
-                startPosMenuRed.addChoice(p.toString(), p, p == startPosition, parkPosMenuRed);
-            }
-        }
-        for(Field.Start_Pos p : Field.Start_Pos.values())
-        {
-            if(p.ordinal() > START_FAR_RED6.ordinal()) {
-                startPosMenuBlue.addChoice(p.toString(), p, p == startPosition, parkPosMenuBlue);
-            }
-        }
+    {
+
+            startPosMenu.addChoice(p.toString(), p, p == startPosition, parkPosMenu);
+
+    }
 
 
-        for(Field.Park_Pos g : Field.Park_Pos.values())
+    /*    for(Field.Park_Pos g : Field.Park_Pos.values())
         {
             if(g.ordinal() <= OUTSIDEPRIMARYPARK2RED.ordinal()) {
-                parkPosMenuRed.addChoice(g.toString(), g, g == parkPos, numShotMenu);
+                parkPosMenu.addChoice(g.toString(), g, g == parkPos, numShotMenu);
             }
         }
         for(Field.Park_Pos g : Field.Park_Pos.values())
@@ -267,7 +257,7 @@ public class AutonConfig extends InitLinearOpMode implements FtcMenu.MenuButtons
                 parkPosMenuBlue.addChoice(g.toString(), g, g == parkPos, numShotMenu);
             }
         }
-
+*/
         for(Field.Num_shots g : Field.Num_shots.values()){
             numShotMenu.addChoice(g.toString(), g, g==numShots, lastLocationMenu);
         }
@@ -305,13 +295,11 @@ public class AutonConfig extends InitLinearOpMode implements FtcMenu.MenuButtons
 
         allianceColor = allianceMenu.getCurrentChoiceObject();
 
-        if(allianceColor == Field.Alliance.RED) {
-            startPosition = startPosMenuRed.getCurrentChoiceObject();
-        }else {
-            startPosition = startPosMenuBlue.getCurrentChoiceObject();
-        }
 
-        parkPos = allianceColor == Field.Alliance.RED?parkPosMenuRed.getCurrentChoiceObject():parkPosMenuBlue.getCurrentChoiceObject();
+        startPosition = startPosMenu.getCurrentChoiceObject();
+
+
+        parkPos = parkPosMenu.getCurrentChoiceObject();
 
         delay = (float)delayMenu.getCurrentValue();
         xOffset = (float)xOffsetMenu.getCurrentValue();
@@ -330,13 +318,13 @@ public class AutonConfig extends InitLinearOpMode implements FtcMenu.MenuButtons
 
         prfMgr.setBotName(bot.toString());
         prfMgr.setStartPosition(startPosition.ordinal());
-        prfMgr.setParkPosition(parkPos.ordinal());
         prfMgr.setAllianceColor(allianceColor.toString());
         prfMgr.setDelay(delay);
         prfMgr.setXOffset(xOffset);
         prfMgr.setEnableAutonDebug(autonDebugEnable.ordinal());
         prfMgr.setLastLoc(lastLoc.ordinal());
         prfMgr.setNumShots(numShots);
+
 
 
 

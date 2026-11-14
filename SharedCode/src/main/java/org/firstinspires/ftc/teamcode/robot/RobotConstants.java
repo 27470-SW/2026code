@@ -95,15 +95,30 @@ public class RobotConstants
   public static double DEFAULT_TRAJ_POSITION = 0.45;
   public static  int MIN_TRAJ_ENCODER = 0;
   public static  int MAX_TRAJ_ENCODER = 2800;
-  public static  double RED_GOAL_APRIL_TAG = 24;
-  public static  double BLUE_GOAL_APRIL_TAG = 20;
+  public static  double RED_CELL_APRIL_TAG1_FIRST = 30;
+  public static  double RED_CELL_APRIL_TAG2_FIRST = 31;
+  public static  double RED_CELL_APRIL_TAG3_FIRST = 32;
+  public static  double RED_CELL_APRIL_TAG4_FIRST = 33;
+  public static  double RED_CELL_APRIL_TAG1 = 34;
+  public static  double RED_CELL_APRIL_TAG2 = 35;
+  public static  double RED_CELL_APRIL_TAG3 = 36;
+  public static  double RED_CELL_APRIL_TAG4 = 37;
+  public static  double BLUE_CELL_APRIL_TAG1_FIRST = 38;
+  public static  double BLUE_CELL_APRIL_TAG2_FIRST = 39;
+  public static  double BLUE_CELL_APRIL_TAG3_FIRST = 40;
+  public static  double BLUE_CELL_APRIL_TAG4_FIRST = 41;
+  public static  double BLUE_CELL_APRIL_TAG1 = 42;
+  public static  double BLUE_CELL_APRIL_TAG2 = 43;
+  public static  double BLUE_CELL_APRIL_TAG3 = 44;
+  public static  double BLUE_CELL_APRIL_TAG4 = 45;
+
   public final static int GPP_APRIL_TAG = 21;
   public final static int PGP_APRIL_TAG = 22;
   public final static int PPG_APRIL_TAG = 23;
-  public static  double POLLEN_VELOCITY_CLOSE = 900;
-    public static  double NECTAR_VELOCITY_CLOSE = 1200;
-    public static  double SHOOTER_VELOCITY_POLLEN = 950;
-    public static  double SHOOTER_VELOCITY_NECTAR = 1300;
+  public static  double POLLEN_VELOCITY_CLOSE = 1025;
+    public static  double NECTAR_VELOCITY_CLOSE = 1050;
+    public static  double SHOOTER_VELOCITY_POLLEN = 1025;
+    public static  double SHOOTER_VELOCITY_NECTAR = 1050;
     public static  double BACKWARD_TRANSITION_TIME = 100;
   public static int SHOOT_CLOSE_TRAJ = -400;
   public static int SHOOT_FAR_TRAJ = -1250;
@@ -332,7 +347,7 @@ public class RobotConstants
   public static double BORD_SPD = .1;
   public static Chassis bot= Chassis.B7252;
   public static Field.Alliance alliance = Field.Alliance.RED;
-  public static PositionOption startPos = Field.Start_Pos.FARMAINLYNEARRED;
+  public static PositionOption startPos = Field.Start_Pos.START_FIRST;
 
   public static DcMotorSimple.Direction DT_FLDIR = DcMotorSimple.Direction.FORWARD;
   public static DcMotorSimple.Direction DT_BLDIR = DcMotorSimple.Direction.FORWARD;
@@ -631,7 +646,7 @@ public class RobotConstants
 
     DT_MAX_IPS = DT_MAX_RPM/60.0 * DT_CIRCUM;
     DT_MAX_CPS = DT_MAX_IPS * DT_CPI;
-    DT_SAF_IPS = DT_MAX_IPS * 0.7;
+    DT_SAF_IPS = DT_MAX_IPS * 0.8;
     DT_SAF_CPS = DT_SAF_IPS * DT_CPI;
 
     if(!kVsetManual) kV = 1.0 / rpmToVelocity(DT_MAX_RPM);

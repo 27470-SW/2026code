@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.field;
 
-import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Movement.*;
 import static org.firstinspires.ftc.teamcode.field.Route.Heading.*;
 
@@ -22,30 +21,16 @@ public class MoveToParkPOSDECODE {
     public void makeTraj(Field.Park_Pos parkPos, Field.Alliance alliance) {
         RobotLog.dd(TAG, "choosing park in movetoparkposdecode");
 
-        if (parkPos == INSIDEPRIMARYPARK1RED) {
+        if (parkPos == Field.Park_Pos.PARK1) {
             route.addLocation(route.parkInside1Red, LINE, HEAD_LINEAR);
-        } else if (parkPos == INSIDEPRIMARYPARK2RED) {
+        } else if (parkPos == Field.Park_Pos.PARK2) {
             route.addLocation(route.parkInside2Red, LINE, HEAD_LINEAR);
-        } else if (parkPos == OUTSIDEPRIMARYPARK1RED) {
-            route.addLocation(route.parkOutside1Red, LINE, HEAD_LINEAR);
-        } else if (parkPos == OUTSIDEPRIMARYPARK2RED) {
-            route.addLocation(route.parkOutside2Red, LINE, HEAD_LINEAR);
-        } else if (parkPos == INSIDEPRIMARYPARK1BLUE){
-            route.addLocation(route.parkInside1Blue, LINE, HEAD_LINEAR,Math.toRadians(270));
-        } else if (parkPos == INSIDEPRIMARYPARK2BLUE){
-            route.addLocation(route.parkInside2Blue, LINE, HEAD_LINEAR);
-        } else if (parkPos == OUTSIDEPRIMARYPARK1BLUE){
-            route.addLocation(route.parkOutside1Blue, LINE, HEAD_LINEAR);
-        }else if (parkPos == OUTSIDEPRIMARYPARK2BLUE) {
-            route.addLocation(route.parkOutside2BLUE, LINE, HEAD_LINEAR);
-
         }
-        else if (parkPos == NOPARKRED ){
+         else if (parkPos == Field.Park_Pos.NOPARK) {
 
-        }
-        else if (parkPos == N0PARKBLUE){
+            }
 
-        }
+
         else {
             if(alliance == Field.Alliance.RED)
                 route.addLocation(route.tempParkRed, LINE, HEAD_CONSTANT);

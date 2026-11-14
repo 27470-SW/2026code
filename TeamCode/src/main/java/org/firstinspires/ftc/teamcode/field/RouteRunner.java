@@ -322,7 +322,7 @@ public void moveToPosition4(){
      @Override
      protected void shootWiffleClose(){
          robot.shooterP.autonShootClose();
-         robot.shooterP.controlShooterW.setWheelVelocity(1225);
+         robot.shooterP.controlShooterW.setWheelVelocity(1025);
          RobotLog.dd(TAG, "Shoot Balls Close");
      }
 
@@ -364,7 +364,7 @@ public void moveToPosition4(){
     @Override
     protected void shoot1(){
 
-        robot.shooterP.shoot(NECTAR,true);
+        robot.shooterP.shoot(POLLEN,true);
 
         RobotLog.dd(TAG, "Shoot Transition 1");}
     @Override
@@ -417,6 +417,13 @@ public void moveToPosition4(){
         };
 
         mTimerShoot3.schedule(mTtShoot3, 2000);
+    }
+
+    protected void transitionOn(){
+        robot.transitionWheels.moveAtRate(1);
+    }
+    @Override protected void transitionOff(){
+        robot.transitionWheels.moveAtRate(0);
     }
 
     @Override

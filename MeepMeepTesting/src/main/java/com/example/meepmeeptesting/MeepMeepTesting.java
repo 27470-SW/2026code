@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-import static org.firstinspires.ftc.teamcode.field.Field.Park_Pos.*;
 import static org.firstinspires.ftc.teamcode.field.Field.Start_Pos.*;
 
 import org.firstinspires.ftc.teamcode.field.Field;
@@ -60,7 +59,7 @@ public class MeepMeepTesting
          // The route comes from SharedCode: the same Decode_Route and route files the robot
          // runs.  Pick the start / park / motif here like you would in the auton menu.
          // RouteRunner.MOTIF_FOUND (and friends) answer the route's ifBlock/whileBlock checks.
-         RouteRunner route = new RouteRunner(START_FAR_RED6, INSIDEPRIMARYPARK1RED, Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP, Field.Num_shots.THREE);
+         RouteRunner route = new RouteRunner(START_FIRST, Field.Park_Pos.PARK1,  Field.Wiffle_Pos.PARK2, Field.Motif.SHOOTGPP, Field.Num_shots.THREE);
 
          TrajectorySequence seq = route.toMeepMeep();
 
