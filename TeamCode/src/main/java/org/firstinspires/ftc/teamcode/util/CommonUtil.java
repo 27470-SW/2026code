@@ -102,7 +102,9 @@ public class CommonUtil
             viewIds.add(1, viewportContainerIds[1]);
         }
 
-        //initOpenCV(alliance, side);
+        // Only opmodes that set useOpenCv = true (e.g. CameraTest) open the camera here;
+        // initOpenCV() returns immediately otherwise, so MecanumTeleop is not affected.
+        initOpenCV(alliance, side);
     }
 
     private  void initOpModeProps()

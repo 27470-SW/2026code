@@ -230,8 +230,12 @@ public class MecanumTeleop extends InitLinearOpMode
             dashboard.displayText(l++, String.format(Locale.US, "Localizer, %s", mechDrv.getLocalizer().getClass().getSimpleName()));
 //            dashboard.displayText(l++, String.format(Locale.US, " Camera Found %b Camera Dist %f", targetFound, distanceToTheGoal));
             dashboard.displayText(l++, String.format(Locale.US, " intergral sum = %f", robot.shooterP.controlShooterW.getIntegralSum()));
-            dashboard.displayText(l++, String.format(Locale.US, " Camera State = %s", robot.visionPortal.getCameraState()));
-            dashboard.displayText(l++, String.format(Locale.US, " tipped = %b", robot.tippedState()));
+            if (robot.visionPortal != null) {
+                dashboard.displayText(l++, String.format(Locale.US, " Camera State = %s", robot.visionPortal.getCameraState()));
+                dashboard.displayText(l++, String.format(Locale.US, " tipped = %b", robot.tippedState()));
+            } else {
+                dashboard.displayText(l++, " Camera NOT initialized - check webcam name in config");
+            }
         }
 
         if(VERBOSE) RobotLog.dd(TAG, "TEL SHT:%.1f ARM:%.1f INT:%.1f DRV:%.1f",

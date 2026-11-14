@@ -518,17 +518,20 @@ public class MecanumBot extends BasicBot {
             // SDK 12+: detections can be single tags or tag clusters; only single tags have id/metadata.
             if (!(anyDetection instanceof AprilTagSingleDetection)) continue;
             AprilTagSingleDetection detection = (AprilTagSingleDetection) anyDetection;
-            // Look to see if we have size info on this tag.
-            if (detection.metadata != null) {
+            // The tag ID is available even when the tag is not in the tag library.
+            // Tags 30-45 are NOT in the DECODE library (IDs 20-24), so metadata (and ftcPose)
+            // will be null for them -- don't require it just to check the ID.
+            {
                 //  Check to see if we want to track towards this tag.
                 RobotLog.dd(TAG, String.format("detected aprilTag: %d", detection.id));
-                if ((RobotConstants.alliance == RED && (detection.id == RED_CELL_APRIL_TAG1_FIRST || detection.id == RED_CELL_APRIL_TAG2_FIRST || detection.id == RED_CELL_APRIL_TAG3_FIRST || detection.id == RED_CELL_APRIL_TAG4_FIRST || detection.id == RED_CELL_APRIL_TAG1 || detection.id == RED_CELL_APRIL_TAG2 || detection.id == RED_CELL_APRIL_TAG3 || detection.id == RED_CELL_APRIL_TAG4))) {
+                Field.Alliance alliance = getAlliance();
+                if ((alliance == RED && (detection.id == RED_CELL_APRIL_TAG1_FIRST || detection.id == RED_CELL_APRIL_TAG2_FIRST || detection.id == RED_CELL_APRIL_TAG3_FIRST || detection.id == RED_CELL_APRIL_TAG4_FIRST || detection.id == RED_CELL_APRIL_TAG1 || detection.id == RED_CELL_APRIL_TAG2 || detection.id == RED_CELL_APRIL_TAG3 || detection.id == RED_CELL_APRIL_TAG4))) {
                     // Yes, we want to use this tag.
                     desiredTag = detection;
                     return true;
 
                     // don't look any further.
-                } else if ((RobotConstants.alliance == BLUE && (detection.id == BLUE_CELL_APRIL_TAG1_FIRST || detection.id == BLUE_CELL_APRIL_TAG2_FIRST || detection.id == BLUE_CELL_APRIL_TAG3_FIRST || detection.id == BLUE_CELL_APRIL_TAG4_FIRST || detection.id == BLUE_CELL_APRIL_TAG1 || detection.id == BLUE_CELL_APRIL_TAG2 || detection.id == BLUE_CELL_APRIL_TAG3 || detection.id == BLUE_CELL_APRIL_TAG4))) {
+                } else if ((alliance == BLUE && (detection.id == BLUE_CELL_APRIL_TAG1_FIRST || detection.id == BLUE_CELL_APRIL_TAG2_FIRST || detection.id == BLUE_CELL_APRIL_TAG3_FIRST || detection.id == BLUE_CELL_APRIL_TAG4_FIRST || detection.id == BLUE_CELL_APRIL_TAG1 || detection.id == BLUE_CELL_APRIL_TAG2 || detection.id == BLUE_CELL_APRIL_TAG3 || detection.id == BLUE_CELL_APRIL_TAG4))) {
                     // Yes, we want to use this tag.
                     desiredTag = detection;
                     return true;
