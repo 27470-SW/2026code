@@ -10,7 +10,6 @@ import org.firstinspires.ftc.ftccommon.external.OnCreate;
 import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
 import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.field.Route;
-import org.firstinspires.ftc.teamcode.field.PositionOption;
 import org.firstinspires.ftc.teamcode.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.util.CommonUtil;
 import org.firstinspires.ftc.teamcode.util.DataLogger;
@@ -30,7 +29,7 @@ public abstract class InitLinearOpMode extends LinearOpMode
         robotName = PreferenceMgr.getBotName();
         RobotLog.dd(TAG, "robotname: " + robotName);
 
-        RobotConstants.Chassis tmpChas = RobotConstants.Chassis.B7252;
+        RobotConstants.Chassis tmpChas = RobotConstants.Chassis.B27470;
         try
         {
             tmpChas = RobotConstants.Chassis.valueOf(robotName);

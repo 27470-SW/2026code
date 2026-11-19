@@ -69,7 +69,7 @@ public class Hummingbird {
 
 
     public double percent;
-    private static final String TAG = "servoIntake";
+    private static final String TAG = "hummingbirdclass";
     public Servo servoH2;
     public Servo servoH1;
     public  double servoH2Zero;

@@ -95,6 +95,11 @@ public class RobotConstants
   public static double DEFAULT_TRAJ_POSITION = 0.45;
   public static  int MIN_TRAJ_ENCODER = 0;
   public static  int MAX_TRAJ_ENCODER = 2800;
+
+  public static  String RED_1 = "RED SCORING";
+  public static  String RED_2 = "RED AUDIENCE";
+  public static  String BLUE_1 = "BLUE SCORING";
+  public static  String BLUE_2 = "BLUE AUDIENCE";
   public static  double RED_CELL_APRIL_TAG1_FIRST = 30;
   public static  double RED_CELL_APRIL_TAG2_FIRST = 31;
   public static  double RED_CELL_APRIL_TAG3_FIRST = 32;
@@ -345,9 +350,28 @@ public class RobotConstants
   public static double DT_MAX_CPS;
   public static double BUTT_SPD = .9987;
   public static double BORD_SPD = .1;
-  public static Chassis bot= Chassis.B7252;
+  public static Chassis bot= Chassis.B27470;
   public static Field.Alliance alliance = Field.Alliance.RED;
   public static PositionOption startPos = Field.Start_Pos.START_FIRST;
+
+  public static double TURRET_OFFSET_X = 0;
+  public static double TURRET_OFFSET_Y = 0;
+  public static double SERVO_CENTER_TRIM_1 = 0;
+  public static double SERVO_CENTER_TRIM_2 = 0;
+  public static double CLOSE_RED_HIVE_X = 12.5;
+  public static double FAR_RED_HIVE_X = 12.5;
+  public static double CLOSE_BLUE_HIVE_X =-12.5;
+  public static double FAR_BLUE_HIVE_X = -12.5;
+  public static double CLOSE_RED_HIVE_Y =-18;
+  public static double FAR_RED_HIVE_Y =18;
+  public static double CLOSE_BLUE_HIVE_Y = -18;
+  public static double FAR_BLUE_HIVE_Y = 18;
+
+  public static double GEAR_RATIO = 2.75;
+  public static double SERVO_RANGE_RAD = Math.toRadians(1800);
+  public static boolean INVERT_DIRECTION = false;
+
+
 
   public static DcMotorSimple.Direction DT_FLDIR = DcMotorSimple.Direction.FORWARD;
   public static DcMotorSimple.Direction DT_BLDIR = DcMotorSimple.Direction.FORWARD;
@@ -461,7 +485,7 @@ public class RobotConstants
 
   public RobotConstants()
   {
-    this(Chassis.B7252);
+    this(Chassis.B27470);
   }
 
   public RobotConstants(Chassis chassis)
@@ -565,7 +589,7 @@ public class RobotConstants
         break;
 
       case B7253:
-      case B7252:
+      case B27470:
         /*  RobotLog.dd(TAG, "Calibrating for Bot %s", bot);
           EL_MIN_ENCODER = -2700;
           EL_MAX_ENCODER = 200;
@@ -680,7 +704,7 @@ public class RobotConstants
 
   public enum Chassis
   {
-    B7252,
+    B27470,
     B7253,
     GENERIC_CHASIS,
 

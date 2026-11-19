@@ -54,7 +54,7 @@ public class MeepMeepTesting
          // With a field size of 800 pixels
 
          // Same RobotConstants as the robot (it's in SharedCode)
-         RobotConstants.init(RobotConstants.Chassis.B7252);
+         RobotConstants.init(RobotConstants.Chassis.B27470);
 
          // The route comes from SharedCode: the same Decode_Route and route files the robot
          // runs.  Pick the start / park / motif here like you would in the auton menu.

@@ -110,7 +110,7 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
     private void initAprilTag() {
         // Create the AprilTag processor by using a builder.
         aprilTag = new AprilTagProcessor.Builder()
-                .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
+                .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())  //TODO
                 .build();
 
         // Adjust Image Decimation to trade-off detection-range for detection-rate.
@@ -361,7 +361,7 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
 
         es.shutdownNow();
 
-        if(camera != null)
+        if(visionPortal != null)
         {
             visionPortal.close();
   //          camera.stopStreaming();

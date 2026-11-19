@@ -6,6 +6,8 @@ import static org.firstinspires.ftc.teamcode.field.Field.Alliance.RED;
 import static org.firstinspires.ftc.teamcode.robot.Motors.MotorModel.GOBILDA_5202_13_7;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO2;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_2;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG1_FIRST;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG2;
@@ -17,6 +19,8 @@ import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRI
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDSTARTINGPOS;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO2;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_2;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG1_FIRST;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG2;
@@ -43,6 +47,7 @@ import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.util.CommonUtil;
 import org.firstinspires.ftc.teamcode.util.PreferenceMgr;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -466,7 +471,7 @@ public class MecanumBot extends BasicBot {
         }
     }
 
-    private AprilTagSingleDetection desiredTag = null;
+    private AprilTagClusterDetection desiredTag = null;
 // Used to hold the data for a detected AprilTag
 
     private LinearOpMode opMode;
@@ -476,7 +481,7 @@ public class MecanumBot extends BasicBot {
         setAlliance(Field.Alliance.valueOf(PreferenceMgr.getAllianceColor()));
         // Create the AprilTag processor by using a builder.
         aprilTag = new AprilTagProcessor.Builder()
-                .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
+                .setTagLibrary(AprilTagGameDatabase.getBioBuzzTagLibrary())
                 .build();
 
         // Adjust Image Decimation to trade-off detection-range for detection-rate.
@@ -493,6 +498,7 @@ public class MecanumBot extends BasicBot {
             visionPortal = new VisionPortal.Builder()
                     .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                     .addProcessor(aprilTag)
+//TODO-camera                    .enableLiveView(false)
                     .build();
             try {
                 setManualExposure(5, 250);  // Use low exposure time to reduce motion blur
@@ -516,20 +522,22 @@ public class MecanumBot extends BasicBot {
         for (AprilTagDetection anyDetection : currentDetections) {
 
             // SDK 12+: detections can be single tags or tag clusters; only single tags have id/metadata.
-            if (!(anyDetection instanceof AprilTagSingleDetection)) continue;
-            AprilTagSingleDetection detection = (AprilTagSingleDetection) anyDetection;
+            if (!(anyDetection instanceof AprilTagClusterDetection)) continue;
+            AprilTagClusterDetection detection = (AprilTagClusterDetection) anyDetection;
             // Look to see if we have size info on this tag.
             if (detection.metadata != null) {
                 //  Check to see if we want to track towards this tag.
-                RobotLog.dd(TAG, String.format("detected aprilTag: %d", detection.id));
-                if ((RobotConstants.alliance == RED && (detection.id == RED_CELL_APRIL_TAG1_FIRST || detection.id == RED_CELL_APRIL_TAG2_FIRST || detection.id == RED_CELL_APRIL_TAG3_FIRST || detection.id == RED_CELL_APRIL_TAG4_FIRST || detection.id == RED_CELL_APRIL_TAG1 || detection.id == RED_CELL_APRIL_TAG2 || detection.id == RED_CELL_APRIL_TAG3 || detection.id == RED_CELL_APRIL_TAG4))) {
+                if ((alliance == RED && (detection.metadata.name.equals(RED_1) || detection.metadata.name.equals(RED_2)))) {
                     // Yes, we want to use this tag.
+                    if(desiredTag != detection) RobotLog.dd(TAG, String.format("detected aprilTag: %s", detection.metadata.name));
                     desiredTag = detection;
+
                     return true;
 
                     // don't look any further.
-                } else if ((RobotConstants.alliance == BLUE && (detection.id == BLUE_CELL_APRIL_TAG1_FIRST || detection.id == BLUE_CELL_APRIL_TAG2_FIRST || detection.id == BLUE_CELL_APRIL_TAG3_FIRST || detection.id == BLUE_CELL_APRIL_TAG4_FIRST || detection.id == BLUE_CELL_APRIL_TAG1 || detection.id == BLUE_CELL_APRIL_TAG2 || detection.id == BLUE_CELL_APRIL_TAG3 || detection.id == BLUE_CELL_APRIL_TAG4))) {
+                } else if ((alliance == BLUE && (detection.metadata.name.equals(BLUE_1) || detection.metadata.name.equals(BLUE_2)))) {
                     // Yes, we want to use this tag.
+                    if(desiredTag != detection) RobotLog.dd(TAG, String.format("detected aprilTag: %s", detection.metadata.name));
                     desiredTag = detection;
                     return true;
                 }

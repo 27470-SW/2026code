@@ -102,7 +102,7 @@ public class CommonUtil
             viewIds.add(1, viewportContainerIds[1]);
         }
 
-        //initOpenCV(alliance, side);
+//TODO-camera        initOpenCV(alliance, side);
     }
 
     private  void initOpModeProps()

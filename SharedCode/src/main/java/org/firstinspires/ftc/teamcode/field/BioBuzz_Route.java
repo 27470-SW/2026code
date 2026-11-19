@@ -683,7 +683,7 @@ public abstract class BioBuzz_Route extends Route
 
 
         /* Qualifier Route Points */
-        if(RobotConstants.bot == RobotConstants.Chassis.B7252) {
+        if(RobotConstants.bot == RobotConstants.Chassis.B27470) {
             moveAwayFromWallRedBackdrop = new Pose2d(50, 15, Math.toRadians(180));
             moveAwayFromWallBlueBackdrop = new Pose2d(-50, 15, Math.toRadians(0));
 

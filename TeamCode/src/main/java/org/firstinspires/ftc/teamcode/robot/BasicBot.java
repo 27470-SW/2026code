@@ -128,7 +128,7 @@ public class BasicBot
     protected String name = "BasicBot";
     public RobotConstants.Chassis chassis = RobotConstants.Chassis.B7253;
 
-    private static Field.Alliance alliance = Field.Alliance.RED;
+    protected static Field.Alliance alliance = Field.Alliance.RED;
 
     private int initHdg = 0;
     public static double autonEndHdg = 0.0;
