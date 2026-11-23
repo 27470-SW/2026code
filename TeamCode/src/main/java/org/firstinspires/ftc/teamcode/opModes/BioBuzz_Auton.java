@@ -49,6 +49,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.firstinspires.ftc.teamcode.opModes.MecanumTeleop.VERBOSE;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.CAMERA_WAIT_TIME;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.GPP_APRIL_TAG;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.PGP_APRIL_TAG;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.PPG_APRIL_TAG;
@@ -100,7 +101,7 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
         do_main_loop();
     }
 
-    private static final boolean USE_WEBCAM = true;  // Set true to use a webcam, or false for a phone camera
+    private static final boolean USE_WEBCAM = false;  // Set true to use a webcam, or false for a phone camera
     private static int DESIRED_TAG_ID = -1;     // Choose the tag you want to approach or set to -1 for ANY tag.
     private VisionPortal visionPortal;               // Used to manage the video source.
     private AprilTagProcessor aprilTag;              // Used for managing the AprilTag detection process.
@@ -148,7 +149,8 @@ public class BioBuzz_Auton extends InitLinearOpMode // implements FtcMenu.MenuBu
         if (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
             telemetry.addData("Camera", "Waiting");
             telemetry.update();
-            while (!isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING)) {
+            double startCamerawWait = startTimer.milliseconds();
+            while (!isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) && startTimer.milliseconds() < startCamerawWait + CAMERA_WAIT_TIME) {
                 sleep(20);
             }
             telemetry.addData("Camera", "Ready");

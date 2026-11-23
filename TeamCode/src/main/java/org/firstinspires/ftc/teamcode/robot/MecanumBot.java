@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static org.firstinspires.ftc.teamcode.field.Field.Alliance.BLUE;
 import static org.firstinspires.ftc.teamcode.field.Field.Alliance.RED;
 import static org.firstinspires.ftc.teamcode.robot.Motors.MotorModel.GOBILDA_5202_13_7;
@@ -8,27 +7,14 @@ import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIR
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BABYHUMMINGBIRDZERO2;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_2;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG1;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG1_FIRST;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG2;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG2_FIRST;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG3;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG3_FIRST;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG4;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.BLUE_CELL_APRIL_TAG4_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.CAMERA_WAIT_TIME;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDSTARTINGPOS;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.HUMMINGBIRDZERO2;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_1;
 import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_2;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG1;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG1_FIRST;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG2;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG2_FIRST;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG3;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG3_FIRST;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG4;
-import static org.firstinspires.ftc.teamcode.robot.RobotConstants.RED_CELL_APRIL_TAG4_FIRST;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.SERVO_CENTER_TRIM_1;
+import static org.firstinspires.ftc.teamcode.robot.RobotConstants.SERVO_CENTER_TRIM_2;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -51,7 +37,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -71,6 +57,8 @@ public class MecanumBot extends BasicBot {
     public Hummingbird babyHummingbird = null;
     public Hummingbird hummingBird = null;
     public MotorComponent transitionWheels = null;
+    public Turret pollenTurret = null;
+
 
     public double logIntakeCurSpd = 0.0;
 
@@ -191,7 +179,7 @@ public class MecanumBot extends BasicBot {
         babyHummingbird = new Hummingbird(hwMap, "baby1", "baby2", BABYHUMMINGBIRDZERO1, BABYHUMMINGBIRDZERO2);
         hummingBird = new Hummingbird(hwMap, "bird1", "bird2", HUMMINGBIRDZERO1, HUMMINGBIRDZERO2);
         transitionWheels = new MotorComponent("shooter1", hwMap);
-
+        pollenTurret = new Turret(hwMap, "turretServo1", "turretServo2", SERVO_CENTER_TRIM_1, SERVO_CENTER_TRIM_2, (MecanumDriveLRR) drive);
 
         /*redLED1 = hwMap.get(DigitalChannel.class, "red1");
         greenLED1 = hwMap.get(DigitalChannel.class, "green1");
@@ -254,6 +242,7 @@ public class MecanumBot extends BasicBot {
         transitionWheels.setZeroPower(DcMotor.ZeroPowerBehavior.FLOAT);
         hummingBird.init(0.2);
         babyHummingbird.init(0);
+        pollenTurret.init(0.5);
 
         crAzYIntake.init();
 
@@ -295,7 +284,9 @@ public class MecanumBot extends BasicBot {
         if (transitionWheels != null) {
             transitionWheels.update();
         }
-
+        if (pollenTurret != null) {
+            pollenTurret.update();
+        }
         double lftTime = updTimer.milliseconds();
         updTimer.reset();
         //RobotLog.dd(TAG, "pose(11) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
@@ -309,7 +300,7 @@ public class MecanumBot extends BasicBot {
         // RobotLog.dd(TAG, "pose(12) is now: %s", drive.getLocalizer().getPoseEstimate().toString());
 
 //        if(VERBOSE) { RobotLog.dd(TAG, "UPD BOT:%.2f LFT:%.2f CLW:%.2f", botTime, lftTime, clawTime); }
-        ledUpdate();
+       // ledUpdate();
     }
 
     public Pose2d getPoseEstimate() {
@@ -446,7 +437,8 @@ public class MecanumBot extends BasicBot {
         if (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
             RobotLog.dd(TAG, "Camera not streaming");
 
-            while (!opMode.isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING)) {
+            double startCamerawWait = updTimer.milliseconds();
+            while (!opMode.isStopRequested() && (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) && updTimer.milliseconds() < startCamerawWait + CAMERA_WAIT_TIME) {
                 Thread.sleep(20);
             }
             RobotLog.dd(TAG, "Camera Ready");

@@ -794,6 +794,7 @@ public class MecanumTeleop extends InitLinearOpMode
         boolean overRideShoot = gpad1.just_pressed(ManagedGamepad.Button.D_UP);
         boolean aDown = gpad2.pressed(ManagedGamepad.Button.A) && !gpad2.pressed(ManagedGamepad.Button.START);
         boolean bDown = gpad2.pressed(ManagedGamepad.Button.B) && !gpad2.pressed(ManagedGamepad.Button.START);
+
         //intake for both controllers
         boolean intakeRev = gpad1.pressed(ManagedGamepad.Button.R_BUMP) || gpad2.pressed(ManagedGamepad.Button.R_BUMP);
         boolean intakeOn = gpad1.pressed(ManagedGamepad.Button.L_BUMP) || gpad2.pressed(ManagedGamepad.Button.L_BUMP);
@@ -862,9 +863,12 @@ public class MecanumTeleop extends InitLinearOpMode
             //robot.shooterP.onAutoTraj();
         //}
 
-//        if (rightJoyPressed){
-//            robot.goPark();
-//        }
+     if (Math.abs(rightJoyY) > 0.2 ){
+            robot.pollenTurret.moveTurretAmount(rightJoyY/100);
+       }
+     if (rightJoyPressed){
+         robot.pollenTurret.setAutoAline(true);
+     }
 
 //        if (abs(rightJoyY) >= 0.2){
 //            robot.park.moveAtControlRate(rightJoyY);

@@ -21,6 +21,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.field.Field;
 import org.firstinspires.ftc.teamcode.util.PreferenceMgr;
 
@@ -47,15 +48,18 @@ public class Turret {
         servoT1Zero = servoT1_0;
         servoT2Zero = servoT2_0;
         alliance = Field.Alliance.valueOf(PreferenceMgr.getAllianceColor());
+        RobotLog.dd(TAG, "initialized Turret");
 
     }
-    public void init (double pos){
+    public void init (double pos) {
+        setPosition(pos);
+    }
+    public void setManPosition(double pos){
+        autoAline = false;
         setPosition(pos);
     }
     public void setPosition(double pos){
         percent = pos;
-
-
 
         if(servoT1 == null) return;
         servoT1.setPosition(getRealPos(pos, servoT1Zero));
@@ -69,9 +73,15 @@ public class Turret {
         percent = percent + amount;
         setPosition(percent);
         RobotLog.dd(TAG, "moving to position: %f", percent);
+        autoAline = false;
     }
 
-    public double getRealPos(double pos, double zero){
+    public void setAutoAline(boolean auto) {
+        autoAline = auto;
+    }
+
+
+        public double getRealPos(double pos, double zero){
 
         return zero + pos + 0.5;
     }
@@ -88,33 +98,44 @@ public class Turret {
 
 
     public void update(){
-        Pose2d robotLocation = mechDrv.getRealPoseEstimate();
-       // setPosition(percent);
-        //setIntakePower(percent);
-        // 1) Turret pivot on the field = robot position + offset rotated by heading
-        double cos = Math.cos(robotLocation.getHeading());
-        double sin = Math.sin(robotLocation.getHeading());
-        double pivotX;
-        double pivotY;
-        double servoCommand;
-        double servo1Pos;
-        double servo2Pos;
-        pivotX = robotLocation.getX() + TURRET_OFFSET_X * cos - TURRET_OFFSET_Y * sin;
-        pivotY = robotLocation.getY() + TURRET_OFFSET_X * sin + TURRET_OFFSET_Y * cos;
-        getHiveLocation(robotLocation);
-        double dx = hiveX - pivotX;
-        double dy = hiveY - pivotY;
-        double pivotDist = Math.hypot(dx, dy);
-        double bearing = Math.atan2(dy, dx);
-        double desired = bearing - robotLocation.getHeading(); // - TURRET_ZERO_ANGLE;//Look out for needing to get it from pie to -pie
-        servoCommand = angleToServoCommand(desired);
-        servo1Pos = clamp(0.5 + servoCommand + SERVO_CENTER_TRIM_1, 0.0, 1.0);
-        servo2Pos = clamp(0.5 + servoCommand + SERVO_CENTER_TRIM_2, 0.0, 1.0);
-        servoT1.setPosition(servo1Pos);
-        servoT2.setPosition(servo2Pos);
-        RobotLog.dd(TAG, "%s Percent:%f POS:%f", servo1Name, percent, pivotY,servoCommand, servo1Pos, pivotX, pivotY, servoCommand,servo1Pos,
-         servo2Pos);
+        if (autoAline) {
+            Pose2d robotLocation = mechDrv.getRealPoseEstimate();
+            // setPosition(percent);
+            //setIntakePower(percent);
+            // 1) Turret pivot on the field = robot position + offset rotated by heading
+            double cos = Math.cos(robotLocation.getHeading());
+            double sin = Math.sin(robotLocation.getHeading());
+            double pivotX;
+            double pivotY;
+            double servoCommand;
+            double servo1Pos;
+            double servo2Pos;
+            pivotX = robotLocation.getX() + TURRET_OFFSET_X * cos - TURRET_OFFSET_Y * sin;
+            pivotY = robotLocation.getY() + TURRET_OFFSET_X * sin + TURRET_OFFSET_Y * cos;
+            getHiveLocation(robotLocation);
+            double dx = hiveX - pivotX;
+            double dy = hiveY - pivotY;
+            double pivotDist = Math.hypot(dx, dy);
+            double bearing = Math.atan2(dy, dx);
+            double desired = bearing - robotLocation.getHeading(); // - TURRET_ZERO_ANGLE;//Look out for needing to get it from pie to -pie
+            servoCommand = angleToServoCommand(desired);
+            servo1Pos = clamp(0.5 + servoCommand + SERVO_CENTER_TRIM_1, 0.0, 1.0);
+            servo2Pos = clamp(0.5 + servoCommand + SERVO_CENTER_TRIM_2, 0.0, 1.0);
+            servoT1.setPosition(servo1Pos);
+            servoT2.setPosition(servo2Pos);
+
+
+        logCount++;
+        if(logCount == 10) {
+            RobotLog.dd(TAG, "%s Percent:%f PIVOTY:%f PIVOTX:%f ServoPos:%f Pos1:%f Pos2::%f HIVEX:%f HIVEY:%f Bearing:%f, Desired:%f ", servo1Name, percent, pivotY, pivotX, servoCommand, servo1Pos, servo2Pos, hiveX, hiveY, Math.toDegrees(bearing), desired);
+            logCount = 0;
+        }
+        }
+        else {
+            RobotLog.dd(TAG, "%s Percent:%f autoAline:%b servoT1:%f servoT2:%f", servo2Name, percent, autoAline, servoT1.getPosition(), servoT2.getPosition());
+        }
     }
+    int logCount = 0;
 
     public void getHiveLocation(Pose2d robotLocation){
         double robotY = robotLocation.getY ();
@@ -159,4 +180,6 @@ public class Turret {
     private double hiveX;
     private double hiveY;
     public Field.Alliance alliance;
+    public boolean autoAline = true;
+
 }

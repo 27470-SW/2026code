@@ -223,6 +223,8 @@ public class RobotConstants
 
   public static Double SWP_SRV = 4.8;
 
+  public static double CAMERA_WAIT_TIME = 2000;
+
   public static DcMotorSimple.Direction TR_DIR = DcMotorSimple.Direction.FORWARD;
   public static double TR_SPD_SCL = 0.5;
   public static double TR_MAX_IPS = 5.0;
